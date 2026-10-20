@@ -14,3 +14,12 @@ src/ezyocr/resources/models/*
 !src/ezyocr/resources/models/.gitkeep
 docs
 images/
+
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore

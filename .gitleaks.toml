@@ -1,0 +1,13 @@
+title = "ezyocr-apps gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "known false positives: these are cookie/field/variable names, not actual secret values"
+regexes = [
+  '''^(adminAccessToken|adminAccessTokenExpiredAt|accessTokenExpiredAt)$''',
+  '''^tracking_number$''',
+  '''^result\.next_page_token$''',
+  '''^camera\.captures_(dir|keep_days)$''',
+]

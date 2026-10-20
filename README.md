@@ -4,6 +4,15 @@
 
 Đóng gói cho macOS (`.app` trong file `.dmg`) và Windows (bộ cài `.msi`).
 
+## Đóng góp
+
+Repo này quét secret trước mỗi lần commit và trên mỗi push/PR bằng [gitleaks](https://github.com/gitleaks/gitleaks). Để bật kiểm tra pre-commit ở máy sau khi clone:
+
+```
+git config core.hooksPath .githooks
+brew install gitleaks
+```
+
 ## Cấu trúc thư mục
 
 ```

@@ -1,0 +1,8 @@
+# Rules
+
+- Never add sensitive information to this project (API keys, tokens, passwords, connection strings, secret keys, private keys, personal information...). Do not hardcode these values in source code, committed config files, or anywhere else in the repo. Sensitive values must be supplied via runtime configuration/environment variables kept outside the repo.
+- Real waybill photos and OCR results contain customer personal information (names, phone numbers, addresses). Keep them in `images/` and `output/`, which are ignored; never commit them, and never copy them into `tools/`, `src/`, test resources or docs.
+- Before `git add`/`git commit`, review the diff (`git status`, `git diff --cached`) to make sure no secret has slipped in, including in sample images, sample logs, or attachments (screenshots, exported settings...).
+- Do not commit key/cert/keystore files (`.pem`, `.key`, `.p12`, `.pfx`, `.jks`, `.keystore`) or `.env` files. These patterns are in `.gitignore`. Code signing identities are passed to the build scripts via the `SIGN_IDENTITY` environment variable.
+- If sensitive information is found to have been committed (even in old commits), report it to the user immediately and ask how to proceed (rotate/revoke the exposed value, rewrite history...) — do not run `git filter-repo`, force-push, or rewrite history on your own without confirmation.
+- Every push and pull request is scanned by the `gitleaks` GitHub Action (`.github/workflows/gitleaks.yml`, config in `.gitleaks.toml`). Known false positives (cookie/field/variable names, not real secrets) are allowlisted there — do not loosen the allowlist to hide an actual secret finding.
