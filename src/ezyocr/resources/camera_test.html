@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="__HTML_LANG__">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ camera.page_title }}</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --text: #1d2330;
+    --muted: #6b7280;
+    --border: #d9dde4;
+    --accent: #1f6feb;
+    --ok: #1a7f37;
+    --warn: #b26b00;
+    --error: #c62828;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #15181e;
+      --card: #1e232b;
+      --text: #e6e8ec;
+      --muted: #9aa3b2;
+      --border: #333a46;
+      --accent: #4d8ff5;
+      --ok: #3fb950;
+      --warn: #d29922;
+      --error: #ef6b6b;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 20px; border-bottom: 1px solid var(--border); background: var(--card); }
+  h1 { font-size: 17px; margin: 0 12px 0 0; }
+  .chip { padding: 2px 10px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); font-size: 13px; }
+  .chip b { font-weight: 600; }
+  .chip.ok b { color: var(--ok); }
+  .chip.warn b { color: var(--warn); }
+  .chip.error b { color: var(--error); }
+  main { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 16px; padding: 16px 20px; }
+  section { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; min-width: 0; }
+  h2 { font-size: 14px; margin: 0 0 10px; }
+  #preview { width: 100%; aspect-ratio: 16 / 9; object-fit: contain; background: #000; border-radius: 6px; display: block; }
+  .actions { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+  button { padding: 8px 18px; font: inherit; font-weight: 600; border: 0; border-radius: 6px; background: var(--accent); color: #fff; cursor: pointer; }
+  button:disabled { opacity: .5; cursor: default; }
+  button.secondary { background: transparent; color: var(--text); border: 1px solid var(--border); font-weight: 500; }
+  #notice { color: var(--muted); }
+  #notice.error { color: var(--error); }
+  .hint { color: var(--muted); font-size: 13px; margin: 10px 0 0; }
+  [hidden] { display: none !important; }
+  .toggle { display: flex; align-items: center; gap: 6px; margin-left: auto; color: var(--muted); cursor: pointer; }
+  #results { display: flex; flex-direction: column; gap: 10px; max-height: calc(100vh - 140px); overflow: auto; }
+  .result { border: 1px solid var(--border); border-left: 4px solid var(--ok); border-radius: 6px; padding: 8px 12px; }
+  .result.partial { border-left-color: var(--warn); }
+  .result .tracking { font-size: 17px; font-weight: 700; font-family: ui-monospace, Menlo, monospace; word-break: break-all; }
+  .result dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; margin: 6px 0 0; }
+  .result dt { color: var(--muted); }
+  .result dd { margin: 0; word-break: break-all; }
+  .empty { color: var(--muted); }
+  .banner { margin: 16px 20px 0; padding: 10px 14px; border: 1px solid var(--warn); border-radius: 8px; color: var(--warn); background: var(--card); }
+  @media (max-width: 800px) { main { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="heading">{{ camera.heading_test }}</h1>
+  <span class="chip" id="chip-ocr">{{ camera.chip_ocr }} <b>{{ camera.ocr_loading }}</b></span>
+  <span class="chip" id="chip-camera">{{ camera.chip_camera }} <b>{{ camera.camera_off }}</b></span>
+  <span class="chip station-only" id="chip-session" hidden>{{ camera.chip_session }} <b>{{ camera.session_logged_out }}</b></span>
+  <span class="chip station-only" id="chip-pending" hidden>{{ camera.chip_pending }} <b>0</b></span>
+  <span class="chip station-only" id="chip-uploads" hidden>{{ camera.chip_uploads }} <b>0</b></span>
+</header>
+<p class="banner" id="banner" hidden></p>
+<main>
+  <section>
+    <h2>{{ camera.section_camera }}</h2>
+    <img id="preview" alt="">
+    <div class="actions">
+      <button id="capture" type="button">{{ camera.capture }}</button>
+      <button id="recognize-image" type="button" class="secondary">{{ camera.recognize_image }}</button>
+      <span id="notice"></span>
+      <label class="toggle" id="require-barcode-toggle" hidden><input type="checkbox" id="require-barcode"> {{ camera.require_barcode }}</label>
+    </div>
+    <p class="hint" id="station-hint" hidden>{{ camera.station_hint }}</p>
+    <p class="hint" id="test-hint">{{ camera.test_hint }}</p>
+  </section>
+  <section>
+    <h2>{{ camera.section_results }}</h2>
+    <div id="results"><p class="empty">{{ camera.no_results }}</p></div>
+  </section>
+</main>
+<script>
+  const I18N = __I18N__;
+  const t = (key) => I18N[key] || key;
+  const preview = document.getElementById("preview");
+  const notice = document.getElementById("notice");
+  const results = document.getElementById("results");
+  const captureButton = document.getElementById("capture");
+  const recognizeImageButton = document.getElementById("recognize-image");
+  const requireBarcode = document.getElementById("require-barcode");
+
+  const OCR_STATES = { loading: [t("camera.ocr_loading"), "warn"], ready: [t("camera.ocr_ready"), "ok"], error: [t("camera.ocr_error"), "error"] };
+  const CAMERA_STATES = { off: [t("camera.camera_off"), ""], on: [t("camera.camera_on"), "ok"], error: [t("camera.camera_error"), "error"] };
+
+  function setChip(id, states, value) {
+    const [text, cls] = states[value] || [value, ""];
+    const chip = document.getElementById(id);
+    chip.className = "chip " + cls;
+    chip.querySelector("b").textContent = text;
+  }
+
+  function setNotice(text, isError) {
+    notice.textContent = text;
+    notice.className = isError ? "error" : "";
+  }
+
+  function showStatus(status) {
+    setChip("chip-ocr", OCR_STATES, status.ocr || "loading");
+    if (status.ocr_backend) {
+      const ocrChip = document.getElementById("chip-ocr");
+      ocrChip.querySelector("b").textContent += ` · ${t("ocr.backend." + status.ocr_backend)}`;
+      ocrChip.title = status.ocr_error || "";
+    }
+    setChip("chip-camera", CAMERA_STATES, status.camera || "off");
+    requireBarcode.checked = !!status.require_barcode;
+    const station = !status.test_mode;
+    document.querySelectorAll(".station-only").forEach((el) => { el.hidden = !station; });
+    document.getElementById("station-hint").hidden = !station;
+    document.getElementById("test-hint").hidden = station;
+    document.getElementById("require-barcode-toggle").hidden = station;
+    if (!station) return;
+    document.getElementById("heading").textContent = t("camera.heading_station");
+    setChip("chip-session", { true: [t("camera.session_running"), "ok"], false: [t("camera.session_logged_out"), "warn"] }, String(!!status.running));
+    setChip("chip-pending", {}, String(status.pending || 0));
+    setChip("chip-uploads", {}, String(status.uploads || 0));
+    const banner = document.getElementById("banner");
+    let message = "";
+    if (status.configured === false) message = t("camera.banner_not_configured");
+    else if (!status.running) message = t("camera.banner_not_running");
+    else if (status.camera === "error") message = t("camera.banner_camera_error");
+    banner.textContent = message;
+    banner.hidden = !message;
+  }
+
+  function addRow(dl, label, value) {
+    const dt = document.createElement("dt");
+    dt.textContent = label;
+    const dd = document.createElement("dd");
+    dd.textContent = value || "—";
+    dl.append(dt, dd);
+  }
+
+  function showResult(r) {
+    const empty = results.querySelector(".empty");
+    if (empty) empty.remove();
+    const card = document.createElement("div");
+    card.className = "result" + (r.tracking_number && r.customer_code ? "" : " partial");
+    const tracking = document.createElement("div");
+    tracking.className = "tracking";
+    tracking.textContent = r.tracking_number || t("camera.no_tracking");
+    const dl = document.createElement("dl");
+    addRow(dl, t("camera.field_customer"), r.customer_code);
+    addRow(dl, t("camera.field_candidates"), (r.customer_candidates || []).join(", "));
+    addRow(dl, t("camera.field_carrier"), r.carrier);
+    addRow(dl, t("camera.field_tracking_source"), r.tracking_source);
+    addRow(dl, t("camera.field_master"), r.master_tracking_number);
+    addRow(dl, t("camera.field_elapsed"), r.elapsed_ms + " ms");
+    addRow(dl, t("camera.field_image"), r.image_id);
+    addRow(dl, t("camera.field_ocr_texts"), (r.ocr_texts || []).join(" | "));
+    card.append(tracking, dl);
+    results.prepend(card);
+  }
+
+  window.addEventListener("ezyocr", (e) => {
+    const { event, data } = e.detail;
+    if (event === "preview") preview.src = data.image;
+    else if (event === "status") showStatus(data);
+    else if (event === "processing") setNotice(t("camera.processing"), false);
+    else if (event === "result") { setNotice("", false); showResult(data); }
+    else if (event === "empty") setNotice((data.ocr_texts || []).length ? t("camera.no_code") + data.ocr_texts.join(" | ") : t("camera.no_text"), false);
+    else if (event === "error") setNotice(data.message, true);
+  });
+
+  requireBarcode.addEventListener("change", async () => {
+    const result = await window.pywebview.api.set_require_barcode(requireBarcode.checked);
+    if (!result.ok) setNotice(result.error, true);
+  });
+
+  captureButton.addEventListener("click", async () => {
+    const result = await window.pywebview.api.capture_now();
+    if (!result.ok) setNotice(result.error, true);
+  });
+
+  recognizeImageButton.addEventListener("click", async () => {
+    recognizeImageButton.disabled = true;
+    try {
+      const result = await window.pywebview.api.recognize_image_file();
+      if (!result.ok) setNotice(result.error, true);
+    } finally {
+      recognizeImageButton.disabled = false;
+    }
+  });
+
+  async function init() {
+    showStatus(await window.pywebview.api.get_status());
+  }
+
+  if (window.pywebview && window.pywebview.api) init();
+  else window.addEventListener("pywebviewready", init);
+</script>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="__HTML_LANG__">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ about.page_title }}</title>
+<style>
+  :root {
+    --indigo: #4338ca;
+    --blue: #2563eb;
+    --cyan: #06b6d4;
+    --beam: #5ef2d6;
+    --bg: #f5f7fc;
+    --card: #ffffff;
+    --text: #172036;
+    --muted: #64708a;
+    --border: #e3e8f3;
+    --link: #2563eb;
+    --tint: rgba(37, 99, 235, .08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1424;
+      --card: #171e33;
+      --text: #e8ecf7;
+      --muted: #94a0bb;
+      --border: #263050;
+      --link: #6ea8ff;
+      --tint: rgba(110, 168, 255, .12);
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 13px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif; min-height: 100vh; display: flex; flex-direction: column; -webkit-user-select: none; user-select: none; }
+  .hero { flex: none; position: relative; overflow: hidden; padding: 30px 24px 26px; text-align: center; color: #fff; background: linear-gradient(135deg, var(--indigo) 0%, var(--blue) 52%, var(--cyan) 100%); }
+  .hero::before { content: ""; position: absolute; inset: -40% -20% auto; height: 120%; background: radial-gradient(closest-side, rgba(255, 255, 255, .22), transparent); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--beam) 20%, var(--beam) 80%, transparent); box-shadow: 0 0 14px var(--beam); }
+  .frame { position: absolute; width: 22px; height: 22px; border: 3px solid rgba(255, 255, 255, .35); }
+  .frame.tl { top: 14px; left: 14px; border-right: 0; border-bottom: 0; border-top-left-radius: 8px; }
+  .frame.tr { top: 14px; right: 14px; border-left: 0; border-bottom: 0; border-top-right-radius: 8px; }
+  .frame.bl { bottom: 16px; left: 14px; border-right: 0; border-top: 0; border-bottom-left-radius: 8px; }
+  .frame.br { bottom: 16px; right: 14px; border-left: 0; border-top: 0; border-bottom-right-radius: 8px; }
+  .hero img { position: relative; width: 88px; height: 88px; filter: drop-shadow(0 8px 18px rgba(10, 20, 60, .35)); }
+  .hero h1 { position: relative; margin: 10px 0 0; font-size: 24px; font-weight: 700; letter-spacing: .3px; }
+  .hero p { position: relative; margin: 2px 0 0; color: rgba(255, 255, 255, .85); }
+  .badges { position: relative; display: flex; justify-content: center; gap: 8px; margin-top: 14px; }
+  .badge { padding: 3px 11px; border-radius: 999px; background: rgba(255, 255, 255, .16); border: 1px solid rgba(255, 255, 255, .28); font-size: 12px; color: rgba(255, 255, 255, .85); }
+  .badge b { color: #fff; font-weight: 600; }
+  .content { flex: none; padding: 18px 20px 0; }
+  .description { margin: 0 4px 16px; text-align: center; color: var(--muted); }
+  .rows { margin: 0; padding: 0; list-style: none; background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .rows li { display: flex; align-items: center; gap: 12px; padding: 10px 14px; }
+  .rows li + li { border-top: 1px solid var(--border); }
+  .rows svg { flex: none; width: 30px; height: 30px; padding: 7px; border-radius: 8px; background: var(--tint); color: var(--link); }
+  .rows .label { color: var(--muted); font-size: 12px; }
+  .rows .value { font-weight: 600; }
+  .rows .note { color: var(--muted); font-size: 12px; }
+  a { color: var(--link); text-decoration: none; cursor: pointer; }
+  a:hover { text-decoration: underline; }
+  footer { flex: none; margin-top: auto; padding: 16px 20px 18px; text-align: center; color: var(--muted); font-size: 12px; }
+</style>
+</head>
+<body>
+<section class="hero">
+  <span class="frame tl"></span><span class="frame tr"></span><span class="frame bl"></span><span class="frame br"></span>
+  <img src="__ICON__" alt="">
+  <h1>EzyOCR</h1>
+  <p>{{ about.tagline }}</p>
+  <div class="badges">
+    <span class="badge">{{ about.version_label }} <b>__VERSION__</b></span>
+    <span class="badge">Python <b>__PYTHON__</b></span>
+  </div>
+</section>
+<main class="content">
+  <p class="description">{{ about.description }}</p>
+  <ul class="rows">
+    <li>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="m3 13 9 5 9-5"/></svg>
+      <div><div class="label">{{ about.platform_label }}</div><div class="value"><a target="_blank" href="https://ezyplatform.com">ezyplatform</a></div><div class="note">{{ about.platform_note }}</div></div>
+    </li>
+    <li>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v4M15 3v4M7 7h10v5a5 5 0 0 1-10 0V7Z"/><path d="M12 17v4"/></svg>
+      <div><div class="label">{{ about.plugin_label }}</div><div class="value">ezyocr</div><div class="note">{{ about.plugin_note }}</div></div>
+    </li>
+    <li>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6.5 6.5 0 0 1 3.5 6"/></svg>
+      <div><div class="label">{{ about.developer_label }}</div><div class="value"><a target="_blank" href="https://youngmonkeys.org">Young Monkeys</a></div></div>
+    </li>
+    <li>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>
+      <div><div class="label">{{ about.license_label }}</div><div class="value"><a target="_blank" href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></div></div>
+    </li>
+    <li>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>
+      <div><div class="label">{{ about.system_label }}</div><div class="value">__SYSTEM__</div></div>
+    </li>
+  </ul>
+</main>
+<footer>{{ about.copyright }}</footer>
+</body>
+</html>

@@ -1,0 +1,699 @@
+<!doctype html>
+<html lang="__HTML_LANG__">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ setup.title }}</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --text: #1d2330;
+    --muted: #6b7280;
+    --border: #d9dde4;
+    --accent: #1f6feb;
+    --accent-text: #ffffff;
+    --accent-soft: #e8f0fe;
+    --error: #c62828;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #15181e;
+      --card: #1e232b;
+      --text: #e6e8ec;
+      --muted: #9aa3b2;
+      --border: #333a46;
+      --accent: #4d8ff5;
+      --accent-soft: #1d2c44;
+      --error: #ef6b6b;
+    }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 720px; margin: 32px auto; padding: 0 16px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  p.lead { margin: 0 0 24px; color: var(--muted); }
+  section { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; margin-bottom: 16px; }
+  h2 { font-size: 15px; margin: 0 0 12px; }
+  .section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+  .section-head h2 { margin: 0; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
+  .full { grid-column: 1 / -1; }
+  label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+  input, select { display: block; width: 100%; height: 38px; margin: 0; padding: 0 10px; font: inherit; line-height: normal; color: var(--text); background-color: var(--bg); border: 1px solid var(--border); border-radius: 6px; }
+  select {
+    -webkit-appearance: none;
+    appearance: none;
+    padding-right: 32px;
+    background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+    background-position: calc(100% - 16px) 50%, calc(100% - 11px) 50%;
+    background-size: 5px 5px;
+    background-repeat: no-repeat;
+    cursor: pointer;
+  }
+  input[type="checkbox"], input[type="radio"] { display: inline-block; width: 16px; height: 16px; margin: 0; vertical-align: -2px; accent-color: var(--accent); flex: none; }
+  label.check { display: flex; align-items: center; gap: 8px; font-size: 15px; color: var(--text); cursor: pointer; margin: 0; }
+  .row { display: flex; gap: 8px; }
+  .row input { flex: 1; min-width: 0; }
+  .row button { flex: none; height: 38px; padding: 0 14px; }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  input:disabled { opacity: .6; }
+  .actions { display: flex; align-items: center; gap: 12px; }
+  button { padding: 9px 20px; font: inherit; font-weight: 600; border: 0; border-radius: 6px; background: var(--accent); color: var(--accent-text); cursor: pointer; white-space: nowrap; }
+  button.secondary { background: transparent; color: var(--text); border: 1px solid var(--border); font-weight: 500; }
+  button.small { padding: 5px 12px; font-size: 13px; }
+  button.link { background: none; border: 0; padding: 0; color: var(--accent); font-weight: 500; }
+  button:disabled { opacity: .6; cursor: default; }
+  .message { color: var(--error); }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .muted { color: var(--muted); }
+  .notice { padding: 10px 12px; border: 1px solid var(--error); border-radius: 8px; color: var(--error); font-size: 13px; margin-bottom: 14px; }
+  .setting-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .setting-row:last-child { border-bottom: 0; }
+  .chip { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+
+  .onboard { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 32px 16px; }
+  .onboard-card { width: 440px; max-width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 28px; box-shadow: 0 12px 32px rgba(0, 0, 0, .06); }
+  .onboard-card h1 { font-size: 20px; }
+  .onboard-card .lead { margin-bottom: 20px; }
+  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; font-size: 14px; }
+  .brand .muted { font-size: 12px; }
+  .logo { width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, #4d8ff5, #1f4fd1); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 12px; letter-spacing: .5px; flex: none; }
+  .steps { display: flex; gap: 8px; list-style: none; padding: 0; margin: 0 0 20px; counter-reset: step; font-size: 12px; color: var(--muted); }
+  .steps li { flex: 1; display: flex; align-items: center; gap: 6px; padding-top: 8px; border-top: 3px solid var(--border); counter-increment: step; }
+  .steps li::before { content: counter(step); width: 18px; height: 18px; border-radius: 50%; display: inline-grid; place-items: center; background: var(--bg); border: 1px solid var(--border); font-size: 11px; font-weight: 600; flex: none; }
+  .steps li.current { border-color: var(--accent); color: var(--text); font-weight: 600; }
+  .steps li.current::before { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .steps li.done { border-color: var(--accent); }
+  .steps li.done::before { content: "✓"; background: var(--accent-soft); border-color: transparent; color: var(--accent); }
+  .steps.inline { max-width: 360px; }
+  .langs { display: grid; gap: 8px; margin-bottom: 12px; }
+  .langs.many { max-height: 300px; overflow-y: auto; padding: 2px 4px 2px 2px; }
+  .lang { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; margin: 0; color: var(--text); font-size: 15px; }
+  .lang.selected { border-color: var(--accent); background: var(--accent-soft); }
+  .lang-name { flex: 1; min-width: 0; font-weight: 500; display: flex; flex-direction: column; line-height: 1.3; }
+  .lang-name small { font-weight: 400; font-size: 12px; color: var(--muted); }
+  .lang-group { font-size: 12px; font-weight: 600; color: var(--muted); margin: 6px 0 0; text-transform: uppercase; letter-spacing: .4px; }
+  .lang-group:first-child { margin-top: 0; }
+  .lang-empty { padding: 24px 12px; text-align: center; font-size: 13px; color: var(--muted); border: 1px dashed var(--border); border-radius: 10px; margin-bottom: 12px; }
+  .search { position: relative; margin-bottom: 10px; }
+  .search svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--muted); }
+  .search input { padding-left: 34px; }
+  .field { margin-bottom: 14px; }
+  .password { position: relative; }
+  .password input { padding-right: 44px; }
+  .icon-button { position: absolute; right: 0; top: 0; width: 38px; height: 38px; padding: 0; display: inline-grid; place-items: center; background: none; border: 0; color: var(--muted); }
+  .icon-button svg { width: 18px; height: 18px; }
+  .onboard-actions { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 20px; }
+  .onboard-actions.between { justify-content: space-between; }
+  .onboard-actions > button:not(.link) { min-width: 140px; display: inline-flex; justify-content: center; align-items: center; gap: 8px; }
+  .spinner { width: 14px; height: 14px; border: 2px solid rgba(255, 255, 255, .4); border-top-color: #fff; border-radius: 50%; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .account { display: flex; align-items: center; gap: 12px; }
+  .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-weight: 700; flex: none; text-transform: uppercase; }
+  .account .body { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .choice { display: flex; gap: 10px; align-items: flex-start; padding: 12px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; margin: 0 0 8px; color: var(--text); font-size: 15px; }
+  .choice.selected { border-color: var(--accent); background: var(--accent-soft); }
+  .choice.disabled { cursor: default; opacity: .6; }
+  .choice input { margin-top: 3px; }
+  .choice .body { flex: 1; min-width: 0; }
+  .choice .title { font-weight: 600; }
+  .choice .sub { font-size: 13px; color: var(--muted); }
+  .choice select { margin-top: 8px; }
+
+  .overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(0, 0, 0, .45); }
+  .dialog { max-width: 420px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; box-shadow: 0 12px 32px rgba(0, 0, 0, .25); }
+  .dialog p { margin: 0 0 18px; }
+  .dialog .actions { justify-content: flex-end; }
+  @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-search" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="m10.5 10.5 3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 16 16"><path d="M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="8" cy="8" r="2" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
+</svg>
+
+<div class="onboard" id="step-language" hidden>
+  <div class="onboard-card">
+    <div class="brand"><div class="logo">OCR</div><div><b>EzyOCR</b><div class="muted">{{ onboard.subtitle }}</div></div></div>
+    <ol class="steps"><li class="current">{{ onboard.step_language }}</li><li>{{ onboard.step_login }}</li><li>{{ onboard.step_settings }}</li></ol>
+    <h1>{{ language.title }}</h1>
+    <p class="lead">{{ language.lead }}</p>
+    <div class="search" id="lang-search" hidden>
+      <svg><use href="#i-search"/></svg>
+      <input type="search" id="lang-query" placeholder="{{ language.search }}">
+    </div>
+    <div class="langs" id="langs" role="radiogroup" aria-label="{{ language.title }}"></div>
+    <div class="lang-empty" id="lang-empty" hidden>{{ language.empty }}</div>
+    <div class="hint" id="language-restart-hint" hidden>{{ language.restart_hint }}</div>
+    <div class="message" id="language-message"></div>
+    <div class="onboard-actions">
+      <button type="button" id="language-continue">{{ language.continue }}</button>
+    </div>
+  </div>
+</div>
+
+<div class="onboard" id="step-login" hidden>
+  <form class="onboard-card" id="login-form">
+    <div class="brand"><div class="logo">OCR</div><div><b>EzyOCR</b><div class="muted">{{ onboard.subtitle }}</div></div></div>
+    <ol class="steps"><li class="done">{{ onboard.step_language }}</li><li class="current">{{ onboard.step_login }}</li><li>{{ onboard.step_settings }}</li></ol>
+    <h1>{{ login.title }}</h1>
+    <p class="lead">{{ login.lead }}</p>
+    <div class="notice" id="login-message" hidden></div>
+    <div class="field">
+      <label for="login_admin_url">{{ login.admin_url }}</label>
+      <input id="login_admin_url" type="url" placeholder="https://admin.example.com" required>
+      <div class="hint">{{ login.admin_url_hint }}</div>
+    </div>
+    <div class="field">
+      <label for="login_username">{{ login.username }}</label>
+      <input id="login_username" autocomplete="username" required>
+    </div>
+    <div class="field">
+      <label for="login_password">{{ login.password }}</label>
+      <div class="password">
+        <input id="login_password" type="password" autocomplete="current-password" required>
+        <button type="button" class="icon-button" id="toggle-password" title="{{ login.show_password }}" aria-label="{{ login.show_password }}"><svg><use href="#i-eye"/></svg></button>
+      </div>
+    </div>
+    <div class="onboard-actions between">
+      <button type="button" class="link" id="login-back">{{ login.back }}</button>
+      <button type="submit" id="login-submit"><span class="spinner" id="login-spinner" hidden></span><span id="login-submit-text">{{ login.submit }}</span></button>
+    </div>
+  </form>
+</div>
+
+<main id="step-settings" hidden>
+  <ol class="steps inline" id="settings-steps" hidden><li class="done">{{ onboard.step_language }}</li><li class="done">{{ onboard.step_login }}</li><li class="current">{{ onboard.step_settings }}</li></ol>
+  <h1>{{ setup.title }}</h1>
+  <p class="lead">{{ setup.lead }} <b>{{ menu.station }} → {{ menu.setup }}</b></p>
+  <form id="form">
+    <section>
+      <h2>{{ setup.account_section }}</h2>
+      <div class="account">
+        <div class="avatar" id="account-avatar"></div>
+        <div class="body">
+          <div><b id="account-username"></b> <span class="muted" id="account-admin-url"></span></div>
+          <div class="hint" style="margin:0" id="account-expires"></div>
+        </div>
+        <button type="button" class="secondary small" id="logout">{{ setup.logout }}</button>
+      </div>
+      <div class="hint">{{ setup.logout_hint }}</div>
+    </section>
+    <section>
+      <h2>{{ menu.station }}</h2>
+      <div class="grid">
+        <div>
+          <label for="camera_index">{{ setup.camera }}</label>
+          <input id="camera_index" data-key="camera.index" type="number" min="0" step="1">
+          <div class="hint">{{ setup.camera_hint }}</div>
+        </div>
+        <div>
+          <label for="language">{{ setup.language }}</label>
+          <select id="language" data-key="language">
+            <option value="auto">{{ language.auto }}</option>
+            <option value="vi">Tiếng Việt</option>
+            <option value="en">English</option>
+            <option value="zh">中文（简体）</option>
+          </select>
+          <div class="hint">{{ setup.language_hint }}</div>
+        </div>
+      </div>
+    </section>
+    <section>
+      <div class="section-head">
+        <h2>{{ setup.business_section }}</h2>
+        <button type="button" class="secondary small" id="open-business-scripts">{{ setup.business_download }}</button>
+      </div>
+      <div class="notice" id="business-error" hidden></div>
+      <label class="choice" id="choice-default">
+        <input type="radio" name="business_source" value="default">
+        <div class="body">
+          <div class="title">{{ setup.business_default }}</div>
+          <div class="sub">{{ setup.business_default_desc }}</div>
+        </div>
+      </label>
+      <label class="choice" id="choice-downloaded">
+        <input type="radio" name="business_source" value="downloaded">
+        <div class="body">
+          <div class="title">{{ setup.business_downloaded }}</div>
+          <div class="sub" id="business-downloaded-sub">{{ setup.business_downloaded_desc }}</div>
+          <select id="business_script_id"></select>
+        </div>
+      </label>
+      <div class="hint">{{ setup.business_hint }}</div>
+    </section>
+    <section>
+      <h2>{{ setup.ocr_section }}</h2>
+      <div class="grid">
+        <div class="full">
+          <label for="ocr_backend">{{ setup.ocr_backend }}</label>
+          <select id="ocr_backend" data-key="ocr.backend"></select>
+          <div class="hint" id="ocr_status" hidden></div>
+          <div class="hint">{{ setup.ocr_backend_hint }}</div>
+        </div>
+      </div>
+    </section>
+    <section>
+      <h2>{{ setup.printer_section }}</h2>
+      <div class="grid">
+        <div>
+          <label for="printer_name">{{ setup.printer_name }}</label>
+          <input id="printer_name" data-key="printer.name" placeholder="{{ setup.printer_name_placeholder }}">
+        </div>
+        <div>
+          <label for="printer_language">{{ setup.printer_language }}</label>
+          <select id="printer_language" data-key="printer.language">
+            <option value="zpl">ZPL (Zebra)</option>
+            <option value="tspl">TSPL (TSC, Xprinter)</option>
+          </select>
+        </div>
+      </div>
+    </section>
+    <section>
+      <h2>{{ setup.captures_section }}</h2>
+      <div class="grid">
+        <div class="full">
+          <label class="check"><input id="save_captures" data-key="camera.save_captures" type="checkbox"> {{ setup.save_captures }}</label>
+          <div class="hint">{{ setup.save_captures_hint }}</div>
+        </div>
+        <div class="full captures-option">
+          <label for="captures_dir">{{ setup.captures_dir }}</label>
+          <div class="row">
+            <input id="captures_dir" data-key="camera.captures_dir">
+            <button type="button" class="secondary" id="choose_captures_dir">{{ setup.choose_folder }}</button>
+          </div>
+          <div class="hint">{{ setup.captures_dir_hint }}</div>
+        </div>
+        <div class="captures-option">
+          <label for="captures_keep_days">{{ setup.captures_keep_days }}</label>
+          <input id="captures_keep_days" data-key="camera.captures_keep_days" type="number" min="0" step="1">
+          <div class="hint">{{ setup.captures_keep_days_hint }}</div>
+        </div>
+      </div>
+    </section>
+    <section>
+      <div class="section-head">
+        <h2>{{ setup.operator_section }}</h2>
+        <button type="button" class="secondary small" id="reload-operator-settings">{{ menu.reload_operator_settings }}</button>
+      </div>
+      <div class="notice" id="operator-settings-error" hidden></div>
+      <div id="operator-settings-list"></div>
+      <div class="hint">{{ setup.operator_hint }}</div>
+    </section>
+    <div class="actions">
+      <button type="submit">{{ setup.save }}</button>
+      <button type="button" class="secondary" id="cancel">{{ setup.cancel }}</button>
+      <span class="message" id="message"></span>
+    </div>
+  </form>
+</main>
+
+<div class="overlay" id="restart-dialog" hidden>
+  <div class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="restart-message">
+    <p id="restart-message"></p>
+    <div class="actions">
+      <button type="button" class="secondary" id="restart-later"></button>
+      <button type="button" id="restart-confirm"></button>
+    </div>
+  </div>
+</div>
+<script>
+  const I18N = __I18N__;
+  const HTML_LANG = document.documentElement.lang;
+  const t = (key) => I18N[key] || key;
+  const format = (text, values) => text.replace(/\{(\w+)\}/g, (match, name) => (name in values ? values[name] : match));
+  const OCR_STATES = { loading: t("camera.ocr_loading"), ready: t("camera.ocr_ready"), error: t("camera.ocr_error") };
+  const MANY_LANGUAGES_THRESHOLD = 6;
+  const api = () => window.pywebview.api;
+  const $ = (id) => document.getElementById(id);
+  const form = $("form");
+  const message = $("message");
+  const fields = Array.from(document.querySelectorAll("[data-key]"));
+  let state = null;
+  let selectedLanguage = null;
+  let ocrStatusTimer = null;
+
+  function getPath(obj, path) {
+    return path.split(".").reduce((value, key) => (value == null ? undefined : value[key]), obj);
+  }
+
+  function setPath(obj, path, value) {
+    const keys = path.split(".");
+    const last = keys.pop();
+    const target = keys.reduce((node, key) => (node[key] = node[key] || {}), obj);
+    target[last] = value;
+  }
+
+  function formatTime(millis) {
+    return new Date(millis).toLocaleString(HTML_LANG, { dateStyle: "short", timeStyle: "short" });
+  }
+
+  function showStep(step) {
+    $("step-language").hidden = step !== "language";
+    $("step-login").hidden = step !== "login";
+    $("step-settings").hidden = step !== "settings";
+    window.scrollTo(0, 0);
+    if (step === "language") renderLanguages();
+    if (step === "login") showLogin();
+    if (step === "settings") loadSettings();
+  }
+
+  function normalize(text) {
+    return text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  }
+
+  function languageOption(language) {
+    const label = document.createElement("label");
+    label.className = "lang" + (language.code === selectedLanguage ? " selected" : "");
+    const input = document.createElement("input");
+    input.type = "radio";
+    input.name = "onboard_language";
+    input.value = language.code;
+    input.checked = language.code === selectedLanguage;
+    input.addEventListener("change", () => selectLanguage(language.code));
+    const name = document.createElement("span");
+    name.className = "lang-name";
+    name.textContent = language.native;
+    if (language.english !== language.native) {
+      const sub = document.createElement("small");
+      sub.textContent = language.english;
+      name.append(sub);
+    }
+    label.append(input, name);
+    if (language.code === state.system_language) {
+      const chip = document.createElement("span");
+      chip.className = "chip";
+      chip.textContent = t("language.system");
+      label.append(chip);
+    }
+    return label;
+  }
+
+  function groupTitle(text) {
+    const title = document.createElement("div");
+    title.className = "lang-group";
+    title.textContent = text;
+    return title;
+  }
+
+  function renderLanguages() {
+    const languages = state.languages;
+    const many = languages.length > MANY_LANGUAGES_THRESHOLD;
+    const container = $("langs");
+    const query = many ? normalize($("lang-query").value.trim()) : "";
+    const matches = languages.filter((l) => !query || [l.native, l.english, l.code].some((v) => normalize(v).includes(query)));
+    $("lang-search").hidden = !many;
+    container.classList.toggle("many", many);
+    $("lang-empty").hidden = matches.length > 0;
+    container.hidden = matches.length === 0;
+    if (!many) {
+      container.replaceChildren(...matches.map(languageOption));
+      return;
+    }
+    const system = matches.filter((l) => l.code === state.system_language);
+    const others = matches.filter((l) => l.code !== state.system_language).sort((x, y) => x.english.localeCompare(y.english));
+    const children = [];
+    if (system.length) children.push(groupTitle(t("language.system")), ...system.map(languageOption));
+    if (others.length) children.push(groupTitle(t("language.all")), ...others.map(languageOption));
+    container.replaceChildren(...children);
+  }
+
+  function selectLanguage(code) {
+    selectedLanguage = code;
+    document.querySelectorAll(".lang").forEach((l) => l.classList.toggle("selected", l.querySelector("input").value === code));
+    $("language-restart-hint").hidden = code === state.language;
+  }
+
+  $("lang-query").addEventListener("input", renderLanguages);
+
+  $("language-continue").addEventListener("click", async () => {
+    $("language-message").textContent = "";
+    $("language-continue").disabled = true;
+    const result = await api().choose_language(selectedLanguage);
+    if (!result.ok) {
+      $("language-message").textContent = result.error;
+      $("language-continue").disabled = false;
+      return;
+    }
+    if (!result.restart) showStep("login");
+  });
+
+  function showLogin() {
+    $("login_admin_url").value = $("login_admin_url").value || state.admin_url || "";
+    $("login_username").value = $("login_username").value || state.username || "";
+    setLoginBusy(false);
+    (state.admin_url ? (state.username ? $("login_password") : $("login_username")) : $("login_admin_url")).focus();
+  }
+
+  function setLoginBusy(busy) {
+    $("login-submit").disabled = busy;
+    $("login-spinner").hidden = !busy;
+    $("login-submit-text").textContent = busy ? t("login.submitting") : t("login.submit");
+    document.querySelectorAll("#login-form input").forEach((input) => { input.disabled = busy; });
+  }
+
+  $("toggle-password").addEventListener("click", () => {
+    const input = $("login_password");
+    input.type = input.type === "password" ? "text" : "password";
+  });
+
+  $("login-back").addEventListener("click", () => showStep("language"));
+
+  $("login-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const notice = $("login-message");
+    notice.hidden = true;
+    const adminUrl = $("login_admin_url").value.trim();
+    const username = $("login_username").value.trim();
+    const password = $("login_password").value;
+    setLoginBusy(true);
+    const result = await api().login(adminUrl, username, password);
+    setLoginBusy(false);
+    if (!result.ok) {
+      notice.textContent = result.error;
+      notice.hidden = false;
+      return;
+    }
+    $("login_password").value = "";
+    state = result.state;
+    showStep("settings");
+  });
+
+  async function loadOcrBackends() {
+    const select = $("ocr_backend");
+    const backends = await api().get_ocr_backends();
+    select.replaceChildren(...backends.map((backend) => {
+      const option = document.createElement("option");
+      option.value = backend.name;
+      option.textContent = backend.available ? backend.label : `${backend.label} (${t("setup.ocr_unavailable")})`;
+      return option;
+    }));
+  }
+
+  async function showOcrStatus() {
+    const status = await api().get_status();
+    const element = $("ocr_status");
+    if (!status.ocr_backend) {
+      element.hidden = true;
+      return;
+    }
+    const parts = [`${t("setup.ocr_current")}: ${t("ocr.backend." + status.ocr_backend)}`, OCR_STATES[status.ocr] || status.ocr];
+    if (status.ocr_avg_ms != null) parts.push(t("setup.ocr_average").replace("{ms}", status.ocr_avg_ms));
+    if (status.ocr_error) parts.push(status.ocr_error);
+    element.textContent = parts.join(" · ");
+    element.hidden = false;
+  }
+
+  function showAccount() {
+    $("account-avatar").textContent = (state.username || "?").slice(0, 1);
+    $("account-username").textContent = state.username;
+    $("account-admin-url").textContent = "· " + state.admin_url;
+    $("account-expires").textContent = state.expired_at ? format(t("setup.session_expires"), { time: formatTime(state.expired_at) }) : "";
+  }
+
+  async function loadBusinessScripts() {
+    const scripts = await api().get_installed_business_scripts();
+    const select = $("business_script_id");
+    select.replaceChildren(...scripts.map((script) => {
+      const option = document.createElement("option");
+      option.value = script.id;
+      option.textContent = format(t("setup.business_option"), { title: script.title, time: formatTime(script.updated_at) });
+      return option;
+    }));
+    const selected = state.business_script;
+    const downloaded = $("choice-downloaded");
+    const hasScripts = scripts.length > 0;
+    downloaded.classList.toggle("disabled", !hasScripts);
+    downloaded.querySelector("input").disabled = !hasScripts;
+    select.hidden = !hasScripts;
+    $("business-downloaded-sub").textContent = hasScripts ? t("setup.business_downloaded_desc") : t("setup.business_none");
+    const source = hasScripts && selected.source === "downloaded" ? "downloaded" : "default";
+    document.querySelector(`input[name=business_source][value=${source}]`).checked = true;
+    if (scripts.some((script) => script.id === selected.script_id)) select.value = String(selected.script_id);
+    updateBusinessChoices();
+    const error = $("business-error");
+    error.textContent = state.business_script_error ? `${t("setup.business_error")} ${state.business_script_error}` : "";
+    error.hidden = !state.business_script_error;
+  }
+
+  function updateBusinessChoices() {
+    document.querySelectorAll(".choice").forEach((choice) => choice.classList.toggle("selected", choice.querySelector("input").checked));
+  }
+
+  document.querySelectorAll("input[name=business_source]").forEach((radio) => radio.addEventListener("change", updateBusinessChoices));
+
+  ["focus", "change"].forEach((type) => $("business_script_id").addEventListener(type, () => {
+    $("choice-downloaded").querySelector("input").checked = true;
+    updateBusinessChoices();
+  }));
+
+  const OPERATOR_SETTING_LABELS = {
+    requireBarcode: "camera.require_barcode",
+  };
+
+  function operatorSettingValue(value) {
+    if (typeof value === "boolean") return t(value ? "setup.operator_on" : "setup.operator_off");
+    return value == null ? "" : String(value);
+  }
+
+  function operatorSettingRow(field, value) {
+    const row = document.createElement("div");
+    row.className = "setting-row";
+    const label = document.createElement("span");
+    label.textContent = OPERATOR_SETTING_LABELS[field] ? t(OPERATOR_SETTING_LABELS[field]) : field;
+    const chip = document.createElement("span");
+    chip.className = "chip";
+    chip.textContent = operatorSettingValue(value);
+    row.append(label, chip);
+    return row;
+  }
+
+  async function loadOperatorSettings(refresh) {
+    const button = $("reload-operator-settings");
+    const error = $("operator-settings-error");
+    const list = $("operator-settings-list");
+    button.disabled = true;
+    const result = await api().get_operator_settings(!!refresh);
+    button.disabled = false;
+    error.hidden = result.ok;
+    error.textContent = result.ok ? "" : result.error;
+    if (!result.ok) {
+      list.replaceChildren();
+      return;
+    }
+    if (!result.operator) {
+      const empty = document.createElement("div");
+      empty.className = "muted";
+      empty.textContent = t("operator_settings.not_operator");
+      list.replaceChildren(empty);
+      return;
+    }
+    list.replaceChildren(...Object.entries(result.settings).map(([field, value]) => operatorSettingRow(field, value)));
+  }
+
+  $("reload-operator-settings").addEventListener("click", () => loadOperatorSettings(true));
+
+  async function loadSettings() {
+    $("settings-steps").hidden = state.configured && !state.first_run;
+    showAccount();
+    await loadOcrBackends();
+    const settings = await api().get_settings();
+    for (const field of fields) {
+      const value = getPath(settings, field.dataset.key);
+      if (value === undefined || value === null) continue;
+      if (field.type === "checkbox") field.checked = !!value;
+      else field.value = value;
+    }
+    await loadBusinessScripts();
+    $("cancel").hidden = !state.configured || !!state.first_run;
+    $("captures_dir").placeholder = await api().get_default_captures_dir();
+    updateCapturesOptions();
+    showOcrStatus();
+    if (!ocrStatusTimer) ocrStatusTimer = setInterval(showOcrStatus, 2000);
+    loadOperatorSettings(false);
+  }
+
+  const saveCaptures = $("save_captures");
+
+  function updateCapturesOptions() {
+    document.querySelectorAll(".captures-option").forEach((el) => { el.hidden = !saveCaptures.checked; });
+  }
+
+  saveCaptures.addEventListener("change", updateCapturesOptions);
+
+  $("choose_captures_dir").addEventListener("click", async () => {
+    const input = $("captures_dir");
+    const folder = await api().choose_captures_dir(input.value);
+    if (folder) input.value = folder;
+  });
+
+  $("open-business-scripts").addEventListener("click", () => api().open_business_scripts());
+
+  $("logout").addEventListener("click", async () => {
+    const result = await api().logout();
+    if (!result.ok) {
+      message.textContent = result.error;
+      return;
+    }
+    state = await api().get_setup_state();
+    showStep("login");
+  });
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    message.textContent = "";
+    const data = {};
+    for (const field of fields) {
+      let value;
+      if (field.type === "checkbox") value = field.checked;
+      else if (field.type === "number") value = Number(field.value || 0);
+      else value = field.value.trim();
+      setPath(data, field.dataset.key, value);
+    }
+    const source = document.querySelector("input[name=business_source]:checked").value;
+    data.business_script = { source, script_id: source === "downloaded" ? Number($("business_script_id").value || 0) : 0 };
+    const result = await api().save_settings(data);
+    if (!result.ok) message.textContent = result.error;
+    else if (result.restart) askRestart(result.restart);
+  });
+
+  const restartDialog = $("restart-dialog");
+
+  function askRestart(texts) {
+    $("restart-message").textContent = texts.message;
+    $("restart-confirm").textContent = texts.confirm;
+    $("restart-later").textContent = texts.later;
+    restartDialog.hidden = false;
+    $("restart-confirm").focus();
+  }
+
+  $("restart-confirm").addEventListener("click", async () => {
+    const result = await api().restart_app();
+    if (!result.ok) {
+      restartDialog.hidden = true;
+      message.textContent = result.error;
+    }
+  });
+
+  $("restart-later").addEventListener("click", () => {
+    restartDialog.hidden = true;
+    api().apply_settings();
+  });
+
+  $("cancel").addEventListener("click", () => api().open_station());
+
+  async function init() {
+    state = await api().get_setup_state();
+    selectedLanguage = state.system_language;
+    showStep(state.step);
+  }
+
+  if (window.pywebview && window.pywebview.api) init();
+  else window.addEventListener("pywebviewready", init);
+</script>
+</body>
+</html>

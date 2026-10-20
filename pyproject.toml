@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ezyocr"
+version = "0.0.1"
+description = "Trạm nhận diện vận đơn: camera, OCR và cửa sổ ezyplatform"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "Young Monkeys", email = "ta.van.dung@youngmonkeys.org" }]
+dependencies = [
+    "paddleocr==3.7.0",
+    "paddlepaddle==3.0.0",
+    "onnxruntime==1.23.2",
+    "opencv-contrib-python==4.10.0.84",
+    "zxing-cpp==3.1.1",
+    "numpy",
+    "pillow",
+    "pywebview==6.2.1",
+    "certifi",
+    "pywin32; sys_platform == 'win32'",
+]
+
+[project.optional-dependencies]
+dev = ["briefcase==0.4.6"]
+rapidocr = ["rapidocr>=3.0"]
+apple-vision = ["pyobjc-framework-Vision==12.2.2; sys_platform == 'darwin'"]
+windows-ocr = [
+    "winrt-runtime>=3.0; sys_platform == 'win32'",
+    "winrt-Windows.Foundation>=3.0; sys_platform == 'win32'",
+    "winrt-Windows.Globalization>=3.0; sys_platform == 'win32'",
+    "winrt-Windows.Graphics.Imaging>=3.0; sys_platform == 'win32'",
+    "winrt-Windows.Media.Ocr>=3.0; sys_platform == 'win32'",
+    "winrt-Windows.Storage.Streams>=3.0; sys_platform == 'win32'",
+]
+tesseract = ["pytesseract>=0.3.10"]
+
+[project.scripts]
+ezyocr = "ezyocr.app:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+ezyocr = ["resources/*.json", "resources/i18n/*.json", "resources/*.html", "resources/*.png", "resources/models/**/*"]
+
+[tool.briefcase]
+project_name = "EzyOCR"
+bundle = "org.youngmonkeys"
+
+[tool.briefcase.app.ezyocr]
+formal_name = "EzyOCR"
+description = "Trạm nhận diện vận đơn: camera, OCR và cửa sổ ezyplatform"
+sources = ["src/ezyocr"]
+icon = "packaging/icons/ezyocr"
+permission.camera = "EzyOCR dùng camera để đọc nhãn vận đơn."
+
+[tool.briefcase.app.ezyocr.macOS]
+universal_build = false
+min_os_version = "11.0"
+
+[tool.briefcase.app.ezyocr.windows]
+description = "Waybill recognition station: camera, OCR and ezyplatform window"
+requirement_installer_args = ["--no-binary", "proxy_tools"]

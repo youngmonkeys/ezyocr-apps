@@ -1,0 +1,33 @@
+import logging
+import subprocess
+import sys
+from pathlib import Path
+
+logger = logging.getLogger(__name__)
+
+
+class SoundPlayer:
+    def __init__(self, settings):
+        self._settings = settings
+
+    def success(self):
+        self._play(self._settings.success)
+
+    def warning(self):
+        self._play(self._settings.warning)
+
+    def _play(self, path):
+        if not self._settings.enabled or not path:
+            return
+        if not Path(path).is_file():
+            logger.warning("Sound file not found: %s", path)
+            return
+        try:
+            if sys.platform == "darwin":
+                subprocess.Popen(["afplay", path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            elif sys.platform == "win32":
+                import winsound
+
+                winsound.PlaySound(path, winsound.SND_FILENAME | winsound.SND_ASYNC)
+        except Exception:
+            logger.warning("Cannot play sound %s", path, exc_info=True)

@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="__HTML_LANG__">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ business.page_title }}</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --text: #1d2330;
+    --muted: #6b7280;
+    --border: #d9dde4;
+    --accent: #1f6feb;
+    --accent-text: #ffffff;
+    --accent-soft: #e8f0fe;
+    --error: #c62828;
+    --success: #1e7d32;
+    --success-soft: #e6f4ea;
+    --code-bg: #f7f8fa;
+    --thumb-a: #eef3fe;
+    --thumb-b: #cfdcf8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #15181e;
+      --card: #1e232b;
+      --text: #e6e8ec;
+      --muted: #9aa3b2;
+      --border: #333a46;
+      --accent: #4d8ff5;
+      --accent-soft: #1d2c44;
+      --error: #ef6b6b;
+      --success: #5cc172;
+      --success-soft: #1b3324;
+      --code-bg: #171b22;
+      --thumb-a: #233350;
+      --thumb-b: #18233a;
+    }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 860px; margin: 32px auto; padding: 0 16px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  p.lead { margin: 0 0 24px; color: var(--muted); }
+  section { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; margin-bottom: 16px; }
+  h2 { font-size: 15px; margin: 0 0 12px; }
+  .section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+  .section-head h2 { margin: 0; }
+  input { display: block; width: 100%; height: 38px; margin: 0; padding: 0 10px; font: inherit; line-height: normal; color: var(--text); background-color: var(--bg); border: 1px solid var(--border); border-radius: 6px; }
+  select { display: block; width: 100%; height: 38px; margin: 0; padding: 0 10px; font: inherit; color: var(--text); background-color: var(--bg); border: 1px solid var(--border); border-radius: 6px; }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .actions { display: flex; align-items: center; gap: 12px; }
+  button { padding: 9px 20px; font: inherit; font-weight: 600; border: 0; border-radius: 6px; background: var(--accent); color: var(--accent-text); cursor: pointer; white-space: nowrap; }
+  button.secondary { background: transparent; color: var(--text); border: 1px solid var(--border); font-weight: 500; }
+  button.small { padding: 5px 12px; font-size: 13px; }
+  button.link { background: none; border: 0; padding: 0; color: var(--accent); font-weight: 500; }
+  button:disabled { opacity: .5; cursor: default; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .notice { padding: 12px 14px; border: 1px solid var(--error); border-radius: 8px; color: var(--error); font-size: 13px; margin-bottom: 12px; }
+  .chip { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .chip.success { background: var(--success); color: #fff; }
+  .chip.warning { background: #f0a500; color: #2b2200; }
+
+  .toolbar { display: grid; grid-template-columns: 1fr minmax(160px, 220px) auto; gap: 8px; margin-bottom: 16px; }
+  .search { position: relative; }
+  .search svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--muted); }
+  .search input { padding-left: 34px; }
+  .icon-button { width: 38px; height: 38px; padding: 0; display: inline-grid; place-items: center; }
+  .icon-button svg { width: 18px; height: 18px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+  .card { display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; cursor: pointer; transition: box-shadow .15s, transform .15s, border-color .15s; }
+  .card:hover { box-shadow: 0 8px 24px rgba(0, 0, 0, .10); transform: translateY(-2px); }
+  .card.active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+  .thumb { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: var(--bg); }
+  .thumb svg, .thumb img { display: block; width: 100%; height: 100%; }
+  .thumb img { object-fit: cover; }
+  .thumb .chip { position: absolute; top: 10px; left: 10px; box-shadow: 0 2px 6px rgba(0, 0, 0, .15); }
+  .card-body { display: flex; flex-direction: column; flex: 1; padding: 14px 16px 16px; }
+  .card-category { align-self: flex-start; max-width: 100%; margin: 0 0 8px; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; color: var(--accent); background: var(--accent-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-title { margin: 0 0 6px; font-size: 16px; font-weight: 600; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .card-desc { margin: 0 0 14px; font-size: 13px; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .card-foot { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .date { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+  .date svg { width: 14px; height: 14px; }
+  .card-foot button { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; font-size: 13px; }
+  .card-foot button svg { width: 14px; height: 14px; }
+  .list-footer { display: flex; justify-content: center; margin-top: 16px; }
+  .empty { padding: 40px 16px; text-align: center; color: var(--muted); border: 1px dashed var(--border); border-radius: 12px; }
+
+  .detail-head { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 14px; }
+  .detail-head .thumb { width: 200px; flex: none; border-radius: 8px; border: 1px solid var(--border); }
+  .detail-head h2 { font-size: 18px; margin: 0 0 4px; }
+  .detail-head p { margin: 0; color: var(--muted); font-size: 13px; }
+  .detail dl { display: grid; grid-template-columns: 140px 1fr; gap: 6px 12px; margin: 0 0 12px; font-size: 13px; }
+  .detail dt { color: var(--muted); }
+  .detail dd { margin: 0; }
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); }
+  .tabs button { background: none; color: var(--muted); border-radius: 6px 6px 0 0; padding: 8px 14px; font-weight: 500; border: 1px solid transparent; border-bottom: 0; margin-bottom: -1px; }
+  .tabs button.active { color: var(--text); background: var(--code-bg); border-color: var(--border); }
+  pre.code { margin: 0; padding: 12px 0; background: var(--code-bg); border: 1px solid var(--border); border-top: 0; border-radius: 0 0 8px 8px; max-height: 360px; overflow: auto; font: 12px/1.5 ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  pre.code span { display: block; padding: 0 14px; white-space: pre; min-height: 1.5em; }
+  pre.code.numbered { counter-reset: line; }
+  pre.code.numbered span { padding-left: 0; }
+  pre.code.numbered span::before { counter-increment: line; content: counter(line); display: inline-block; width: 40px; padding-right: 12px; text-align: right; color: var(--muted); opacity: .6; }
+  pre.code span.add { background: var(--success-soft); }
+  pre.code span.del { background: rgba(198, 40, 40, .12); }
+  pre.code span.hunk { color: var(--muted); }
+  .detail .actions { justify-content: flex-end; margin-top: 12px; }
+  .detail .message { color: var(--error); margin-right: auto; font-size: 13px; }
+
+  .toast { position: fixed; right: 16px; bottom: 16px; max-width: 380px; background: var(--card); border: 1px solid var(--border); border-left: 4px solid var(--success); border-radius: 8px; padding: 12px 14px; box-shadow: 0 8px 24px rgba(0, 0, 0, .18); font-size: 14px; }
+  .toast .actions { margin-top: 8px; }
+  @media (max-width: 640px) {
+    .toolbar { grid-template-columns: 1fr auto; }
+    .toolbar select { grid-column: 1 / -1; grid-row: 2; }
+    .detail dl { grid-template-columns: 1fr; }
+    .detail-head { flex-direction: column; }
+    .detail-head .thumb { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="g-default" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color: var(--thumb-a)"/><stop offset="1" style="stop-color: var(--thumb-b)"/></linearGradient>
+    <symbol id="label-art" viewBox="0 0 320 180">
+      <circle cx="40" cy="30" r="60" fill="#fff" opacity=".08"/>
+      <circle cx="290" cy="170" r="80" fill="#fff" opacity=".08"/>
+      <g transform="rotate(-6 160 95)">
+        <rect x="98" y="24" width="124" height="142" rx="8" fill="#000" opacity=".15" transform="translate(4 6)"/>
+        <rect x="98" y="24" width="124" height="142" rx="8" fill="#fff"/>
+        <rect x="110" y="36" width="56" height="7" rx="3" fill="#1d2330"/>
+        <rect x="110" y="49" width="84" height="5" rx="2.5" fill="#c4c9d2"/>
+        <g fill="#1d2330">
+          <rect x="110" y="64" width="3" height="34"/><rect x="116" y="64" width="2" height="34"/><rect x="121" y="64" width="5" height="34"/><rect x="129" y="64" width="2" height="34"/><rect x="134" y="64" width="3" height="34"/><rect x="140" y="64" width="6" height="34"/><rect x="149" y="64" width="2" height="34"/><rect x="154" y="64" width="4" height="34"/><rect x="161" y="64" width="2" height="34"/><rect x="166" y="64" width="5" height="34"/><rect x="174" y="64" width="3" height="34"/><rect x="180" y="64" width="2" height="34"/><rect x="185" y="64" width="6" height="34"/><rect x="194" y="64" width="2" height="34"/><rect x="199" y="64" width="4" height="34"/><rect x="206" y="64" width="3" height="34"/>
+        </g>
+        <rect x="110" y="108" width="100" height="5" rx="2.5" fill="#c4c9d2"/>
+        <rect x="110" y="119" width="72" height="5" rx="2.5" fill="#c4c9d2"/>
+        <rect x="110" y="134" width="22" height="22" rx="3" fill="#1d2330"/>
+        <rect x="114" y="138" width="6" height="6" fill="#fff"/><rect x="123" y="146" width="5" height="5" fill="#fff"/>
+        <rect x="140" y="138" width="60" height="5" rx="2.5" fill="#e3e6eb"/>
+        <rect x="140" y="148" width="44" height="5" rx="2.5" fill="#e3e6eb"/>
+      </g>
+      <g transform="translate(232 112)">
+        <rect width="58" height="40" rx="8" fill="#fff" opacity=".95"/>
+        <path d="M10 14 v-6 h6 M42 8 h6 v6 M48 26 v6 h-6 M16 32 h-6 v-6" fill="none" stroke="#1d2330" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="17" y="18" width="24" height="4" rx="2" fill="#1f6feb"/>
+      </g>
+    </symbol>
+    <symbol id="i-calendar" viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M2 7h12M5 1.5v3M11 1.5v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+    <symbol id="i-download" viewBox="0 0 16 16"><path d="M8 2v8M4.5 6.5 8 10l3.5-3.5M2.5 13.5h11" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 16 16"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M13.5 2.5v3h-3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-check" viewBox="0 0 16 16"><path d="m3 8.5 3 3 7-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-search" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="m10.5 10.5 3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<main>
+  <div style="margin-bottom:8px">
+    <button type="button" class="link" id="back">{{ business.back }}</button>
+  </div>
+  <h1>{{ business.page_title }}</h1>
+  <p class="lead">{{ business.lead }}</p>
+
+  <section id="login-required" hidden>
+    <div class="notice">{{ business.login_required }}</div>
+    <button type="button" class="secondary small" id="relogin">{{ business.relogin }}</button>
+  </section>
+
+  <section id="no-permission" hidden>
+    <div class="notice" id="no-permission-text"></div>
+    <button type="button" class="secondary small" id="back-to-setup">{{ business.back_to_setup }}</button>
+  </section>
+
+  <section id="list-section" hidden>
+    <div class="section-head">
+      <h2>{{ business.section }}</h2>
+      <span class="hint" style="margin:0" id="in-use"></span>
+    </div>
+    <div class="toolbar">
+      <div class="search">
+        <svg><use href="#i-search"/></svg>
+        <input type="search" id="keyword" placeholder="{{ business.search }}">
+      </div>
+      <select id="category" aria-label="{{ business.category }}">
+        <option value="">{{ business.all_categories }}</option>
+      </select>
+      <button type="button" class="secondary icon-button" id="refresh" title="{{ business.refresh }}" aria-label="{{ business.refresh }}"><svg><use href="#i-refresh"/></svg></button>
+    </div>
+    <div class="notice" id="list-error" hidden></div>
+    <div class="empty" id="list-empty" hidden></div>
+    <div class="empty" id="list-loading" hidden>{{ business.loading }}</div>
+    <div class="cards" id="cards"></div>
+    <div class="list-footer" id="list-more" hidden>
+      <button type="button" class="secondary" id="more">{{ business.more }}</button>
+    </div>
+  </section>
+
+  <section class="detail" id="detail" hidden>
+    <div class="detail-head">
+      <div class="thumb" id="detail-thumb"></div>
+      <div>
+        <h2 id="detail-title"></h2>
+        <p id="detail-description"></p>
+      </div>
+    </div>
+    <dl>
+      <dt>{{ business.detail_category }}</dt><dd id="detail-category"></dd>
+      <dt>{{ business.detail_updated }}</dt><dd id="detail-updated"></dd>
+      <dt>{{ business.detail_local }}</dt><dd id="detail-local"></dd>
+    </dl>
+    <div class="tabs">
+      <button type="button" data-tab="diff" id="tab-diff">{{ business.tab_diff }}</button>
+      <button type="button" data-tab="code">{{ business.tab_code }}</button>
+    </div>
+    <pre class="code" data-tabpane="diff" id="detail-diff"></pre>
+    <pre class="code numbered" data-tabpane="code" id="detail-code" hidden></pre>
+    <div class="hint">{{ business.code_hint }}</div>
+    <div class="actions">
+      <span class="message" id="detail-message"></span>
+      <button type="button" id="install"></button>
+    </div>
+  </section>
+</main>
+
+<template id="default-thumb">
+  <svg viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice"><rect width="320" height="180" fill="url(#g-default)"/><use href="#label-art"/></svg>
+</template>
+
+<div class="toast" id="toast" hidden>
+  <div id="toast-title"></div>
+  <div class="hint" style="margin:2px 0 0" id="toast-hint"></div>
+  <div class="actions">
+    <button type="button" class="secondary small" id="toast-close">{{ business.close }}</button>
+    <button type="button" class="small" id="toast-setup">{{ business.open_setup }}</button>
+  </div>
+</div>
+
+<script>
+  const I18N = __I18N__;
+  const HTML_LANG = document.documentElement.lang;
+  const t = (key) => I18N[key] || key;
+  const format = (text, values) => text.replace(/\{(\w+)\}/g, (match, name) => (name in values ? values[name] : match));
+  const api = () => window.pywebview.api;
+  const $ = (id) => document.getElementById(id);
+  const defaultThumb = $("default-thumb");
+  let setupState = null;
+  let items = [];
+  let nextPageToken = null;
+  let selectedId = null;
+  let listRequest = 0;
+  let detailRequest = 0;
+  let searchTimer = null;
+
+  function formatDate(millis) {
+    return new Date(millis).toLocaleDateString(HTML_LANG, { dateStyle: "short" });
+  }
+
+  function formatTime(millis) {
+    return new Date(millis).toLocaleString(HTML_LANG, { dateStyle: "short", timeStyle: "short" });
+  }
+
+  function icon(name) {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+    use.setAttribute("href", `#${name}`);
+    svg.append(use);
+    return svg;
+  }
+
+  function setThumbContent(thumb, node) {
+    const chip = thumb.querySelector(".chip");
+    thumb.replaceChildren(node);
+    if (chip) thumb.append(chip);
+  }
+
+  function useDefaultThumb(thumb) {
+    setThumbContent(thumb, defaultThumb.content.cloneNode(true));
+  }
+
+  async function renderThumb(thumb, imageUrl) {
+    useDefaultThumb(thumb);
+    if (!imageUrl) return;
+    const dataUrl = await api().fetch_image(imageUrl);
+    if (!dataUrl) return;
+    const img = document.createElement("img");
+    img.alt = "";
+    img.addEventListener("error", () => useDefaultThumb(thumb), { once: true });
+    img.src = dataUrl;
+    setThumbContent(thumb, img);
+  }
+
+  function stateChip(item) {
+    if (item.state === "new") return null;
+    const chip = document.createElement("span");
+    chip.className = "chip " + (item.state === "update" ? "warning" : "success");
+    chip.textContent = item.state === "update" ? t("business.state_update") : t("business.state_installed");
+    return chip;
+  }
+
+  function actionButton(item) {
+    const button = document.createElement("button");
+    button.type = "button";
+    if (item.state === "installed") {
+      button.className = "secondary";
+      button.append(icon("i-refresh"), t("business.reinstall"));
+    } else if (item.state === "update") {
+      button.append(icon("i-refresh"), t("business.update"));
+    } else {
+      button.append(icon("i-download"), t("business.download"));
+    }
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      install(item.id);
+    });
+    return button;
+  }
+
+  function card(item) {
+    const article = document.createElement("article");
+    article.className = "card" + (item.id === selectedId ? " active" : "");
+    article.dataset.id = item.id;
+    const thumb = document.createElement("div");
+    thumb.className = "thumb";
+    renderThumb(thumb, item.image_url);
+    const chip = stateChip(item);
+    if (chip) thumb.append(chip);
+    const body = document.createElement("div");
+    body.className = "card-body";
+    if (item.category_name) {
+      const category = document.createElement("span");
+      category.className = "card-category";
+      category.textContent = item.category_name;
+      body.append(category);
+    }
+    const title = document.createElement("h3");
+    title.className = "card-title";
+    title.textContent = item.title;
+    const desc = document.createElement("p");
+    desc.className = "card-desc";
+    desc.textContent = item.description;
+    const foot = document.createElement("div");
+    foot.className = "card-foot";
+    const date = document.createElement("span");
+    date.className = "date";
+    date.append(icon("i-calendar"), formatDate(item.updated_at));
+    foot.append(date, actionButton(item));
+    body.append(title, desc, foot);
+    article.append(thumb, body);
+    article.addEventListener("click", () => selectItem(item.id));
+    return article;
+  }
+
+  function showOnly(id) {
+    for (const section of ["login-required", "no-permission", "list-section"]) $(section).hidden = section !== id;
+    if (id !== "list-section") $("detail").hidden = true;
+  }
+
+  function handleFailure(result) {
+    if (result.login_required) {
+      showOnly("login-required");
+      return true;
+    }
+    if (result.no_permission) {
+      $("no-permission-text").textContent = format(t("business.no_permission"), { username: setupState.username });
+      showOnly("no-permission");
+      return true;
+    }
+    return false;
+  }
+
+  async function loadList(append) {
+    const request = ++listRequest;
+    const keyword = $("keyword").value.trim();
+    const categoryId = Number($("category").value || 0) || null;
+    $("list-error").hidden = true;
+    $("list-empty").hidden = true;
+    $("list-loading").hidden = append || items.length > 0;
+    $("more").disabled = true;
+    const result = await api().list_business_scripts(keyword, categoryId, append ? nextPageToken : null);
+    if (request !== listRequest) return;
+    $("list-loading").hidden = true;
+    $("more").disabled = false;
+    if (handleFailure(result)) return;
+    showOnly("list-section");
+    if (result.error) {
+      $("list-error").textContent = result.error;
+      $("list-error").hidden = false;
+      return;
+    }
+    items = append ? items.concat(result.items) : result.items;
+    nextPageToken = result.next_page_token;
+    renderList(keyword || categoryId);
+  }
+
+  async function loadCategories() {
+    const result = await api().list_business_script_categories();
+    if (!result.items) return;
+    const select = $("category");
+    const selected = select.value;
+    select.replaceChildren(select.options[0], ...result.items.map((category) => {
+      const option = document.createElement("option");
+      option.value = category.id;
+      option.textContent = category.name;
+      return option;
+    }));
+    if (result.items.some((category) => String(category.id) === selected)) select.value = selected;
+  }
+
+  function renderList(filtered) {
+    $("cards").replaceChildren(...items.map(card));
+    $("list-more").hidden = !nextPageToken;
+    const empty = $("list-empty");
+    empty.textContent = filtered ? t("business.empty_search") : t("business.empty");
+    empty.hidden = items.length > 0;
+    const inUse = items.find((item) => item.in_use);
+    $("in-use").textContent = inUse ? format(t("business.in_use"), { title: inUse.title }) : "";
+    if (!items.some((item) => item.id === selectedId)) {
+      selectedId = null;
+      $("detail").hidden = true;
+    }
+  }
+
+  async function selectItem(id) {
+    selectedId = id;
+    document.querySelectorAll(".card").forEach((c) => c.classList.toggle("active", Number(c.dataset.id) === id));
+    const request = ++detailRequest;
+    const details = await api().get_business_script(id);
+    if (request !== detailRequest) return;
+    if (handleFailure(details)) return;
+    if (details.error) {
+      $("list-error").textContent = details.error;
+      $("list-error").hidden = false;
+      return;
+    }
+    renderDetail(details);
+  }
+
+  function codeLines(pre, lines) {
+    pre.replaceChildren(...lines.map((line) => {
+      const span = document.createElement("span");
+      if (line.type && line.type !== "same") span.className = line.type;
+      span.textContent = line.text;
+      return span;
+    }));
+  }
+
+  function renderDetail(details) {
+    $("detail-title").textContent = details.title;
+    $("detail-description").textContent = details.description;
+    $("detail-category").textContent = details.category_name || t("business.no_category");
+    renderThumb($("detail-thumb"), details.image_url);
+    $("detail-updated").textContent = formatTime(details.updated_at);
+    $("detail-local").textContent = details.installed_updated_at ? formatTime(details.installed_updated_at) : t("business.not_installed");
+    const hasLocal = details.installed_updated_at != null;
+    $("tab-diff").hidden = !hasLocal;
+    const diff = details.diff.length ? details.diff : [{ type: "same", text: t("business.no_changes") }];
+    codeLines($("detail-diff"), diff);
+    codeLines($("detail-code"), details.content.split("\n").map((text) => ({ type: "same", text })));
+    selectTab(hasLocal && details.state === "update" ? "diff" : "code");
+    const install = $("install");
+    install.disabled = false;
+    install.textContent = details.state === "update"
+      ? format(t("business.install_update"), { time: formatTime(details.updated_at) })
+      : details.state === "installed" ? t("business.reinstall") : t("business.install_new");
+    install.onclick = () => installFromDetail(details.id);
+    $("detail-message").textContent = "";
+    $("detail").hidden = false;
+  }
+
+  function selectTab(name) {
+    document.querySelectorAll("[data-tab]").forEach((tab) => tab.classList.toggle("active", tab.dataset.tab === name));
+    document.querySelectorAll("[data-tabpane]").forEach((pane) => { pane.hidden = pane.dataset.tabpane !== name; });
+  }
+
+  document.querySelectorAll("[data-tab]").forEach((tab) => tab.addEventListener("click", () => selectTab(tab.dataset.tab)));
+
+  async function install(id) {
+    const result = await api().install_business_script(id);
+    if (result.cancelled) return null;
+    if (!result.ok) return result.error;
+    showToast(result);
+    await loadList(false);
+    if (selectedId === id) selectItem(id);
+    return null;
+  }
+
+  async function installFromDetail(id) {
+    $("install").disabled = true;
+    const error = await install(id);
+    $("install").disabled = false;
+    $("detail-message").textContent = error || "";
+  }
+
+  function showToast(result) {
+    $("toast-title").textContent = format(t("business.installed_toast"), { title: result.script.title });
+    $("toast-hint").textContent = result.in_use ? t("business.installed_in_use") : t("business.installed_choose");
+    $("toast").hidden = false;
+  }
+
+  $("toast-close").addEventListener("click", () => { $("toast").hidden = true; });
+  $("toast-setup").addEventListener("click", () => api().open_setup());
+  $("back").addEventListener("click", () => api().open_setup());
+  $("back-to-setup").addEventListener("click", () => api().open_setup());
+  $("relogin").addEventListener("click", () => api().open_setup());
+  $("refresh").addEventListener("click", () => {
+    loadCategories();
+    loadList(false);
+  });
+  $("category").addEventListener("change", () => loadList(false));
+  $("more").addEventListener("click", () => loadList(true));
+  $("keyword").addEventListener("input", () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => loadList(false), 300);
+  });
+
+  async function init() {
+    setupState = await api().get_setup_state();
+    if (!setupState.logged_in) {
+      showOnly("login-required");
+      return;
+    }
+    loadCategories();
+    await loadList(false);
+  }
+
+  if (window.pywebview && window.pywebview.api) init();
+  else window.addEventListener("pywebviewready", init);
+</script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+{
+  "debug": false,
+  "language": "auto",
+  "web": {
+    "admin_url": "",
+    "username": "",
+    "title": "",
+    "width": 1280,
+    "height": 820,
+    "session_check_seconds": 3.0,
+    "clear_session_on_start": false
+  },
+  "upload": {
+    "enabled": true,
+    "media_path": "/api/v1/media/add?avatar=false&notPublic=true",
+    "timeout_seconds": 60.0,
+    "max_attempts": 10
+  },
+  "camera": {
+    "index": 0,
+    "width": 3840,
+    "height": 2160,
+    "detect_width": 1280,
+    "still_ms": 250,
+    "motion_threshold": 4.0,
+    "require_barcode": true,
+    "ocr_fallback_ms": 1200,
+    "save_captures": true,
+    "captures_dir": "",
+    "captures_keep_days": 30
+  },
+  "ocr": {
+    "backend": "paddleocr",
+    "options": {},
+    "use_doc_orientation_classify": true
+  },
+  "printer": {
+    "name": "",
+    "language": "zpl",
+    "label_width_mm": 60,
+    "label_height_mm": 40,
+    "dpi": 203,
+    "page_printer_name": "",
+    "show_print_dialog": true
+  },
+  "sound": {
+    "enabled": true,
+    "success": "/System/Library/Sounds/Glass.aiff",
+    "warning": "/System/Library/Sounds/Funk.aiff"
+  },
+  "business_script": {
+    "source": "default",
+    "script_id": 0
+  }
+}

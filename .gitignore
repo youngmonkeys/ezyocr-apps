@@ -1,0 +1,16 @@
+output/
+
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.DS_Store
+
+build/
+dist/
+logs/
+*.egg-info/
+src/ezyocr/resources/models/*
+!src/ezyocr/resources/models/.gitkeep
+docs
+images/
