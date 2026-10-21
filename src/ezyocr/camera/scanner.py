@@ -62,7 +62,7 @@ class CameraScanner:
         self._on_state("off")
 
     def _open(self):
-        backend = cv2.CAP_AVFOUNDATION if sys.platform == "darwin" else cv2.CAP_ANY
+        backend = {"darwin": cv2.CAP_AVFOUNDATION, "linux": cv2.CAP_V4L2}.get(sys.platform, cv2.CAP_ANY)
         capture = cv2.VideoCapture(self._settings.index, backend)
         if not capture.isOpened():
             logger.warning("Cannot open camera %s", self._settings.index)

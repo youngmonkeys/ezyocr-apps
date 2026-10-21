@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import platform
+import shutil
 import subprocess
 import sys
 import threading
@@ -687,6 +688,8 @@ class StationApp:
             subprocess.Popen(["open", str(logs_dir())])
         elif sys.platform == "win32":
             os.startfile(logs_dir())
+        else:
+            subprocess.Popen(["xdg-open", str(logs_dir())], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     def _restart_services(self):
         self._reload_script()
@@ -1132,6 +1135,8 @@ def _copy_to_clipboard(text):
         subprocess.run(["pbcopy"], input=text.encode("utf-8"), check=True)
     elif sys.platform == "win32":
         subprocess.run(["clip"], input=text.encode("utf-16"), check=True)
+    elif os.environ.get("WAYLAND_DISPLAY") and shutil.which("wl-copy"):
+        subprocess.run(["wl-copy"], input=text.encode("utf-8"), check=True)
     else:
         subprocess.run(["xclip", "-selection", "clipboard"], input=text.encode("utf-8"), check=True)
 

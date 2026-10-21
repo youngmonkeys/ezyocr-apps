@@ -2,7 +2,7 @@
 
 Ứng dụng desktop cho trạm kho: mở một cửa sổ web (trang trạm của ezyplatform), sau khi nhân viên đăng nhập thì bật camera, đọc barcode và OCR nhãn vận đơn Trung Quốc bằng PaddleOCR (engine ONNX Runtime) + zxing-cpp, trích mã vận đơn và mã khách, đẩy kết quả cho trang trạm (trang tự gửi lên ezyplatform) và in tem theo yêu cầu. Thiết kế chi tiết: [docs/thiet-ke-he-thong.md](docs/thiet-ke-he-thong.md).
 
-Đóng gói cho macOS (`.app` trong file `.dmg`) và Windows (bộ cài `.msi`).
+Đóng gói cho macOS (`.app` trong file `.dmg`), Windows (bộ cài `.msi`) và Ubuntu (gói `.deb`).
 
 ## Đóng góp
 
@@ -41,7 +41,8 @@ OCRs/
 │   ├── fetch_models.py          # tải model OCR vào resources/models để đóng gói
 │   ├── make_icon.py             # tạo bộ icon EzyOCR (.icns, .ico, .png)
 │   ├── build_macos.sh           # đóng gói .app + .dmg
-│   └── build_windows.ps1        # đóng gói bộ cài .msi cho Windows
+│   ├── build_windows.ps1        # đóng gói bộ cài .msi cho Windows
+│   └── build_linux.sh           # đóng gói .deb cho Ubuntu
 ├── tools/
 │   ├── ocr_demo.py              # chạy nhận diện hàng loạt trên thư mục ảnh
 │   └── make_sample.py           # tạo ảnh mẫu tiếng Việt
@@ -170,9 +171,52 @@ Khác biệt so với bản macOS:
 - Chưa có nút trên thanh tiêu đề và mục bật/tắt camera trong menu, mở cửa sổ camera bằng menu **Trạm → Xem camera nhận diện**.
 - Cửa sổ dùng Microsoft Edge WebView2, có sẵn trên Windows 11.
 
+## Đóng gói cho Ubuntu
+
+Hỗ trợ Ubuntu 24.04 LTS 64-bit (x86_64). Briefcase đóng gói bằng Python 3.12 của hệ điều hành nên không dùng được cho Ubuntu 22.04 (Python 3.10). Phải build trên chính Ubuntu 24.04, gói `.deb` build trên bản nào thì chỉ cài được trên bản đó; các distro khác (Debian, Fedora, ...) chưa hỗ trợ.
+
+Cài các gói hệ thống để build:
+
+```bash
+sudo apt update
+sudo apt install git build-essential pkg-config python3-dev python3-venv libcairo2-dev libgirepository-2.0-dev gir1.2-gtk-3.0 gir1.2-webkit2-4.1 libcanberra-gtk3-module
+```
+
+Rồi chạy:
+
+```bash
+scripts/build_linux.sh
+```
+
+Script tự tạo `.venv` bằng `/usr/bin/python3` và cài dependencies nếu chưa có (không dùng `uv venv` vì Briefcase yêu cầu cùng bản Python với hệ điều hành), tải model OCR, tạo icon nếu thiếu, rồi dùng Briefcase tạo, build và đóng gói ra `dist/ezyocr_<version>-1~ubuntu-noble_amd64.deb`.
+
+Chạy thử từ mã nguồn trên Ubuntu (sau khi script đã tạo `.venv`):
+
+```bash
+.venv/bin/python -m ezyocr --camera-test
+```
+
+### Người dùng cài đặt
+
+```bash
+sudo apt install ./ezyocr_<version>-1~ubuntu-noble_amd64.deb
+```
+
+`apt` tự cài các gói hệ thống cần thiết (WebKitGTK, âm thanh, clipboard, CUPS client). Mở app từ menu ứng dụng hoặc chạy `ezyocr`. Tài khoản người dùng cần quyền đọc camera (`/dev/video*`); tài khoản đăng nhập desktop thường đã có, nếu không thì thêm vào nhóm `video`: `sudo usermod -aG video $USER` rồi đăng nhập lại.
+
+Khi có bản cập nhật dạng `.deb`, app tải về rồi hỏi mật khẩu quản trị (`pkexec apt-get install`) để cài, sau đó tự mở lại. Kết quả cài ghi vào `logs/update.log`.
+
+Khác biệt so với bản macOS:
+
+- In tem gửi lệnh ZPL/TSPL dạng RAW qua CUPS (`lp -o raw`), `printer.name` là tên hàng đợi CUPS (xem bằng `lpstat -p`), để trống là máy in mặc định. Máy in tem nên khai báo trong CUPS dạng **Raw**.
+- Phiếu HTML in qua hộp thoại in của WebKitGTK, chưa áp dụng `printer.page_printer_name` và `printer.show_print_dialog`.
+- Âm thanh mặc định lấy từ `/usr/share/sounds/freedesktop/stereo` (`complete.oga`, `dialog-warning.oga`), phát bằng `pw-play` hoặc `paplay` (`aplay` chỉ phát được file `.wav`).
+- Chưa có nút trên thanh tiêu đề và mục bật/tắt camera trong menu, mở cửa sổ camera bằng menu **Trạm → Xem camera nhận diện**.
+- Camera mở qua V4L2; `camera.index` là số của thiết bị `/dev/videoN`.
+
 ## Dữ liệu của ứng dụng trên máy
 
-Trên Windows, các file dưới đây nằm trong `%LOCALAPPDATA%\EzyOCR\` (log ở thư mục con `logs\`).
+Trên Windows, các file dưới đây nằm trong `%LOCALAPPDATA%\EzyOCR\` (log ở thư mục con `logs\`). Trên Ubuntu, chúng nằm trong `~/.local/share/EzyOCR/` (hoặc `$XDG_DATA_HOME/EzyOCR/`, log ở thư mục con `logs/`).
 
 
 | Đường dẫn | Nội dung |

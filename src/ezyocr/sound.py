@@ -1,4 +1,5 @@
 import logging
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -29,5 +30,22 @@ class SoundPlayer:
                 import winsound
 
                 winsound.PlaySound(path, winsound.SND_FILENAME | winsound.SND_ASYNC)
+            else:
+                command = _linux_player(path)
+                if command:
+                    subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                else:
+                    logger.warning("No sound player found for %s", path)
         except Exception:
             logger.warning("Cannot play sound %s", path, exc_info=True)
+
+
+def _linux_player(path):
+    for name in ("pw-play", "paplay"):
+        player = shutil.which(name)
+        if player:
+            return [player, path]
+    player = shutil.which("aplay")
+    if player and path.lower().endswith(".wav"):
+        return [player, "-q", path]
+    return None

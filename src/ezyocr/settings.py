@@ -165,8 +165,16 @@ class SettingsStore:
 
 
 def _platform_defaults():
-    if sys.platform != "win32":
+    if sys.platform == "darwin":
         return {}
+    if sys.platform != "win32":
+        sounds = "/usr/share/sounds/freedesktop/stereo"
+        return {
+            "sound": {
+                "success": f"{sounds}/complete.oga",
+                "warning": f"{sounds}/dialog-warning.oga",
+            }
+        }
     media = os.path.join(os.environ.get("WINDIR", r"C:\Windows"), "Media")
     return {
         "sound": {

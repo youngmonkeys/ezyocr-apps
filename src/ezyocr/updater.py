@@ -3,6 +3,7 @@ import logging
 import os
 import platform
 import re
+import shutil
 import ssl
 import subprocess
 import sys
@@ -19,6 +20,9 @@ logger = logging.getLogger(__name__)
 
 PACKAGE_MSI = "MSI"
 PACKAGE_DMG = "DMG"
+PACKAGE_DEB = "DEB"
+LINUX_APP_DIR = Path("/usr/lib/ezyocr")
+LINUX_EXECUTABLE = Path("/usr/bin/ezyocr")
 DOWNLOAD_TIMEOUT_SECONDS = 60
 CHUNK_SIZE = 1 << 16
 PART_SUFFIX = ".part"
@@ -51,6 +55,18 @@ else
 fi
 rmdir "$mnt" 2>/dev/null
 open "$bundle"
+'''
+
+_LINUX_INSTALL_SCRIPT = r'''
+pid="$0"; deb="$1"; exe="$2"
+while kill -0 "$pid" 2>/dev/null; do sleep 0.2; done
+echo "$(date) installing $deb"
+if pkexec apt-get install -y --allow-downgrades "$deb"; then
+    echo "$(date) installed"
+else
+    echo "$(date) apt-get exit code $?"
+fi
+exec "$exe"
 '''
 
 _WINDOWS_INSTALL_SCRIPT = r'''
@@ -139,6 +155,8 @@ def can_install(package_type):
     if package_type == PACKAGE_DMG:
         bundle = _macos_bundle()
         return bundle is not None and os.access(bundle.parent, os.W_OK)
+    if package_type == PACKAGE_DEB:
+        return _linux_executable() is not None and shutil.which("pkexec") is not None
     return False
 
 
@@ -148,6 +166,16 @@ def install_after_exit(path, package_type):
         with log_file.open("a", encoding="utf-8") as log:
             subprocess.Popen(
                 ["/bin/sh", "-c", _MACOS_INSTALL_SCRIPT, str(os.getpid()), str(path), str(_macos_bundle())],
+                stdin=subprocess.DEVNULL,
+                stdout=log,
+                stderr=subprocess.STDOUT,
+                start_new_session=True,
+            )
+        return
+    if package_type == PACKAGE_DEB:
+        with log_file.open("a", encoding="utf-8") as log:
+            subprocess.Popen(
+                ["/bin/sh", "-c", _LINUX_INSTALL_SCRIPT, str(os.getpid()), str(path), str(_linux_executable())],
                 stdin=subprocess.DEVNULL,
                 stdout=log,
                 stderr=subprocess.STDOUT,
@@ -176,6 +204,8 @@ def reveal(path):
             subprocess.Popen(["open", "-R", str(path)])
         elif sys.platform == "win32":
             subprocess.Popen(["explorer", f"/select,{path}"])
+        else:
+            subprocess.Popen(["xdg-open", str(Path(path).parent)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except OSError:
         logger.debug("Cannot reveal %s", path, exc_info=True)
 
@@ -221,6 +251,14 @@ def _windows_executable():
     if executable.stem.lower() in PYTHON_EXECUTABLES:
         return None
     return executable
+
+
+def _linux_executable():
+    if not sys.platform.startswith("linux"):
+        return None
+    if not Path(__file__).resolve().is_relative_to(LINUX_APP_DIR) or not LINUX_EXECUTABLE.is_file():
+        return None
+    return LINUX_EXECUTABLE
 
 
 def _ps_quote(value):
