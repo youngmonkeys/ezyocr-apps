@@ -37,12 +37,19 @@ if (-not (Test-Path "packaging\icons\ezyocr.ico")) {
     Invoke-Step @($Python, "scripts\make_icon.py")
 }
 
+$PyprojectStamp = Join-Path $AppDir ".pyproject.toml"
+if ((Test-Path $AppDir) -and (-not (Test-Path $PyprojectStamp) -or (Get-FileHash "pyproject.toml").Hash -ne (Get-FileHash $PyprojectStamp).Hash)) {
+    Write-Host "==> pyproject.toml changed, recreating app"
+    Remove-Item -Recurse -Force $AppDir
+}
+
 if (Test-Path $AppDir) {
     Write-Host "==> Updating app"
     Invoke-Step @($Python, "-m", "briefcase", "update", "windows", "app", "--update-requirements", "--update-resources", "--no-input")
 } else {
     Write-Host "==> Creating app"
     Invoke-Step @($Python, "-m", "briefcase", "create", "windows", "app", "--no-input")
+    Copy-Item "pyproject.toml" $PyprojectStamp
 }
 
 Write-Host "==> Building app"

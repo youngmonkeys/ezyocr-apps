@@ -18,12 +18,18 @@ if [ ! -f packaging/icons/ezyocr.icns ]; then
     "$PYTHON" scripts/make_icon.py
 fi
 
+if [ -d "$APP_DIR" ] && ! cmp -s pyproject.toml "$APP_DIR/.pyproject.toml"; then
+    echo "==> pyproject.toml changed, recreating app"
+    rm -rf "$APP_DIR"
+fi
+
 if [ -d "$APP_DIR" ]; then
     echo "==> Updating app bundle"
     "$PYTHON" -m briefcase update macOS app --update-requirements --update-resources --no-input
 else
     echo "==> Creating app bundle"
     "$PYTHON" -m briefcase create macOS app --no-input
+    cp pyproject.toml "$APP_DIR/.pyproject.toml"
 fi
 
 echo "==> Building app"
