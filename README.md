@@ -45,7 +45,8 @@ OCRs/
 │   └── build_linux.sh           # đóng gói .deb cho Ubuntu
 ├── tools/
 │   ├── ocr_demo.py              # chạy nhận diện hàng loạt trên thư mục ảnh
-│   └── make_sample.py           # tạo ảnh mẫu tiếng Việt
+│   ├── make_sample.py           # tạo ảnh mẫu tiếng Việt
+│   └── preview_setup.py         # xem trước trang Cài đặt trạm bằng dữ liệu giả
 ├── packaging/icons/             # icon sinh ra bởi make_icon.py
 ├── images/                      # ảnh vận đơn mẫu
 └── docs/                        # tài liệu thiết kế

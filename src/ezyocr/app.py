@@ -72,6 +72,7 @@ class StationApp:
         self._update_lock = threading.Lock()
         self._declined_update_version = None
         self._update_progress = None
+        self._available_update = None
 
     def run(self):
         import webview
@@ -624,10 +625,33 @@ class StationApp:
             self.check_for_updates(manual=False)
             time.sleep(AUTO_UPDATE_INTERVAL_SECONDS)
 
+    def update_info(self, refresh=False):
+        if refresh:
+            try:
+                self._fetch_latest_release()
+            except Exception as e:
+                logger.info("Cannot check for updates: %s", e)
+        release = self._available_update
+        if release is None:
+            return None
+        return {
+            "version": release.get("version") or "",
+            "current": __version__,
+            "release_notes": (release.get("releaseNotes") or "").strip(),
+        }
+
+    def install_update(self):
+        _in_thread(self.check_for_updates)
+
+    def _fetch_latest_release(self):
+        client, token = self._admin_client()
+        release = client.latest_app_release(token, updater.current_os(), updater.current_arch(), __version__)
+        self._available_update = release if release.get("updateAvailable") else None
+        return release
+
     def _check_for_updates(self, manual):
         try:
-            client, token = self._admin_client()
-            release = client.latest_app_release(token, updater.current_os(), updater.current_arch(), __version__)
+            release = self._fetch_latest_release()
         except Exception as e:
             logger.info("Cannot check for updates: %s", e)
             if manual:

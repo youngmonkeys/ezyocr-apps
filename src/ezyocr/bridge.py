@@ -14,6 +14,12 @@ class StationApi:
     def get_version(self):
         return __version__
 
+    def get_update_info(self, refresh=False):
+        return self._app.update_info(bool(refresh))
+
+    def install_update(self):
+        self._app.install_update()
+
     def get_language(self):
         return i18n.language()
 

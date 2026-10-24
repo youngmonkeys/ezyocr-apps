@@ -127,13 +127,25 @@
   .dialog { max-width: 420px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; box-shadow: 0 12px 32px rgba(0, 0, 0, .25); }
   .dialog p { margin: 0 0 18px; }
   .dialog .actions { justify-content: flex-end; }
-  @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+  .update-banner { display: flex; align-items: center; gap: 14px; padding: 16px 18px; margin: 0 0 20px; border-radius: 12px; background: linear-gradient(135deg, #1f6feb, #7c3aed); color: #fff; box-shadow: 0 10px 28px rgba(79, 70, 229, .3); }
+  .update-icon { position: relative; width: 40px; height: 40px; flex: none; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .18); }
+  .update-icon::after { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .6); animation: update-pulse 1.8s ease-out infinite; }
+  .update-icon svg { width: 22px; height: 22px; }
+  .update-banner .body { flex: 1; min-width: 0; }
+  .update-title { font-size: 16px; font-weight: 700; }
+  .update-sub { font-size: 13px; opacity: .9; }
+  .update-notes { margin-top: 6px; font-size: 12px; opacity: .85; white-space: pre-line; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .update-banner button { flex: none; background: #fff; color: #4338ca; }
+  @keyframes update-pulse { from { transform: scale(1); opacity: 1; } to { transform: scale(1.5); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .update-icon::after { animation: none; } }
+  @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .update-banner { flex-wrap: wrap; } }
 </style>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="i-search" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="m10.5 10.5 3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
   <symbol id="i-eye" viewBox="0 0 16 16"><path d="M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="8" cy="8" r="2" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
+  <symbol id="i-update" viewBox="0 0 24 24"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
 </svg>
 
 <div class="onboard" id="step-language" hidden>
@@ -190,6 +202,15 @@
   <ol class="steps inline" id="settings-steps" hidden><li class="done">{{ onboard.step_language }}</li><li class="done">{{ onboard.step_login }}</li><li class="current">{{ onboard.step_settings }}</li></ol>
   <h1>{{ setup.title }}</h1>
   <p class="lead">{{ setup.lead }} <b>{{ menu.station }} → {{ menu.setup }}</b></p>
+  <div class="update-banner" id="update-banner" role="status" hidden>
+    <div class="update-icon"><svg aria-hidden="true"><use href="#i-update"/></svg></div>
+    <div class="body">
+      <div class="update-title" id="update-title"></div>
+      <div class="update-sub" id="update-sub"></div>
+      <div class="update-notes" id="update-notes" hidden></div>
+    </div>
+    <button type="button" id="update-install">{{ setup.update_install }}</button>
+  </div>
   <form id="form">
     <section>
       <h2>{{ setup.account_section }}</h2>
@@ -597,6 +618,23 @@
 
   $("reload-operator-settings").addEventListener("click", () => loadOperatorSettings(true));
 
+  async function showUpdate(refresh) {
+    const update = await api().get_update_info(refresh);
+    $("update-banner").hidden = !update;
+    if (!update) return;
+    $("update-title").textContent = format(t("setup.update_title"), { version: update.version });
+    $("update-sub").textContent = format(t("setup.update_sub"), { current: update.current });
+    $("update-notes").textContent = update.release_notes;
+    $("update-notes").hidden = !update.release_notes;
+  }
+
+  $("update-install").addEventListener("click", () => {
+    const button = $("update-install");
+    button.disabled = true;
+    api().install_update();
+    setTimeout(() => { button.disabled = false; }, 3000);
+  });
+
   async function loadSettings() {
     $("settings-steps").hidden = state.configured && !state.first_run;
     showAccount();
@@ -615,6 +653,7 @@
     showOcrStatus();
     if (!ocrStatusTimer) ocrStatusTimer = setInterval(showOcrStatus, 2000);
     loadOperatorSettings(false);
+    showUpdate(false).then(() => showUpdate(true));
   }
 
   const saveCaptures = $("save_captures");
