@@ -1,4 +1,4 @@
-# Trạm nhận diện vận đơn
+# EzyOCR
 
 Ứng dụng desktop cho trạm kho: mở một cửa sổ web (trang trạm của ezyplatform), sau khi nhân viên đăng nhập thì bật camera, đọc barcode và OCR nhãn vận đơn Trung Quốc bằng PaddleOCR (engine ONNX Runtime) + zxing-cpp, trích mã vận đơn và mã khách, đẩy kết quả cho trang trạm (trang tự gửi lên ezyplatform) và in tem theo yêu cầu. Thiết kế chi tiết: [docs/thiet-ke-he-thong.md](docs/thiet-ke-he-thong.md).
 
@@ -133,13 +133,13 @@ Mặc định app được ký ad-hoc, chạy được trên máy build. Để p
 SIGN_IDENTITY="Developer ID Application: Ten Cong Ty (TEAMID)" scripts/build_macos.sh
 ```
 
-Briefcase sẽ ký và notarize. Nếu chưa có chứng chỉ, trên máy khác mở app lần đầu bằng chuột phải → **Open**, hoặc chạy `xattr -dr com.apple.quarantine "/Applications/Trạm nhận diện.app"`.
+Briefcase sẽ ký và notarize. Nếu chưa có chứng chỉ, trên máy khác mở app lần đầu bằng chuột phải → **Open**, hoặc chạy `xattr -dr com.apple.quarantine "/Applications/EzyOCR.app"`.
 
 Bản build chỉ dành cho kiến trúc của máy build (Intel hoặc Apple Silicon), vì `paddlepaddle`, `onnxruntime` và `opencv` không có bản universal2.
 
 ### Người dùng cài đặt
 
-1. Mở file `.dmg`, kéo **Trạm nhận diện** vào **Applications**.
+1. Mở file `.dmg`, kéo **EzyOCR** vào **Applications**.
 2. Mở app, cho phép dùng camera khi macOS hỏi.
 3. Lần đầu: chọn ngôn ngữ, đăng nhập ezyplatform, rồi chỉnh cài đặt trạm.
 4. Hằng ngày: mở app, đặt kiện dưới camera. App giữ đăng nhập và mở lại trang đang dùng lần trước; chỉ phải đăng nhập lại khi token admin hết hạn.

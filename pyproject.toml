@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ezyocr"
 version = "0.0.1"
-description = "Trạm nhận diện vận đơn: camera, OCR và cửa sổ ezyplatform"
+description = "EzyOCR: nhận diện vận đơn bằng camera, OCR và cửa sổ ezyplatform"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 license = "Apache-2.0"
@@ -55,7 +55,7 @@ bundle = "org.youngmonkeys"
 
 [tool.briefcase.app.ezyocr]
 formal_name = "EzyOCR"
-description = "Trạm nhận diện vận đơn: camera, OCR và cửa sổ ezyplatform"
+description = "EzyOCR: nhận diện vận đơn bằng camera, OCR và cửa sổ ezyplatform"
 sources = ["src/ezyocr"]
 icon = "packaging/icons/ezyocr"
 permission.camera = "EzyOCR dùng camera để đọc nhãn vận đơn."
@@ -65,11 +65,11 @@ universal_build = false
 min_os_version = "11.0"
 
 [tool.briefcase.app.ezyocr.windows]
-description = "Waybill recognition station: camera, OCR and ezyplatform window"
+description = "EzyOCR: waybill recognition with camera, OCR and ezyplatform window"
 requirement_installer_args = ["--no-binary", "proxy_tools"]
 
 [tool.briefcase.app.ezyocr.linux]
-description = "Waybill recognition station: camera, OCR and ezyplatform window"
+description = "EzyOCR: waybill recognition with camera, OCR and ezyplatform window"
 long_description = "Desktop app for warehouse stations: opens the ezyplatform station page, reads barcodes and OCRs waybill labels from the camera, then hands the results to the page and prints labels."
 
 [tool.briefcase.app.ezyocr.linux.system.debian]
