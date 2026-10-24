@@ -8,6 +8,7 @@ venv/
 
 build/
 dist/
+release/
 logs/
 *.egg-info/
 src/ezyocr/resources/models/*

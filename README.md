@@ -42,12 +42,14 @@ OCRs/
 │   ├── make_icon.py             # tạo bộ icon EzyOCR (.icns, .ico, .png)
 │   ├── build_macos.sh           # đóng gói .app + .dmg
 │   ├── build_windows.ps1        # đóng gói bộ cài .msi cho Windows
-│   └── build_linux.sh           # đóng gói .deb cho Ubuntu
+│   ├── build_linux.sh           # đóng gói .deb cho Ubuntu
+│   └── build_release.py         # build theo hệ điều hành đang chạy rồi chép file cài vào release/<tag>
 ├── tools/
 │   ├── ocr_demo.py              # chạy nhận diện hàng loạt trên thư mục ảnh
 │   ├── make_sample.py           # tạo ảnh mẫu tiếng Việt
 │   └── preview_setup.py         # xem trước trang Cài đặt trạm bằng dữ liệu giả
 ├── packaging/icons/             # icon sinh ra bởi make_icon.py
+├── release/                     # file cài theo từng tag để phát hành lên GitHub (không commit)
 ├── images/                      # ảnh vận đơn mẫu
 └── docs/                        # tài liệu thiết kế
 ```
@@ -214,6 +216,62 @@ Khác biệt so với bản macOS:
 - Âm thanh mặc định lấy từ `/usr/share/sounds/freedesktop/stereo` (`complete.oga`, `dialog-warning.oga`), phát bằng `pw-play` hoặc `paplay` (`aplay` chỉ phát được file `.wav`).
 - Chưa có nút trên thanh tiêu đề và mục bật/tắt camera trong menu, mở cửa sổ camera bằng menu **Trạm → Xem camera nhận diện**.
 - Camera mở qua V4L2; `camera.index` là số của thiết bị `/dev/videoN`.
+
+## Phát hành bản cập nhật
+
+App hỏi bản mới qua ezyplatform (`/ezyocr/api/v1/app-releases/latest`). Admin plugin gọi `releases/latest` của GitHub theo **GitHub API URL** và **GitHub repository** cấu hình trong trang Cài đặt của admin, (mặc định `https://api.github.com` và `youngmonkeys/ezyocr-apps`), rồi chọn file cài phù hợp với hệ điều hành và kiến trúc của máy. Vì app tải file cài trực tiếp từ GitHub mà không đăng nhập, repo chứa release phải là repo public.
+
+### 1. Build và chuẩn bị thư mục release
+
+Phiên bản chỉ khai báo ở một nơi: `version` trong `pyproject.toml`. Briefcase lấy giá trị này cho bộ cài, còn app đọc nó qua `ezyocr.__version__` (chạy từ mã nguồn thì đọc thẳng `pyproject.toml`, bản đóng gói thì đọc metadata Briefcase ghi vào app). Muốn phát hành bản mới thì chỉ cần tăng `version` trong `pyproject.toml`.
+
+Trên từng máy build (macOS Apple Silicon, macOS Intel, Windows, Ubuntu), chạy cùng một lệnh từ thư mục gốc của dự án:
+
+```bash
+python3 scripts/build_release.py          # Windows: py -3.12 scripts\build_release.py
+```
+
+Script tự nhận diện hệ điều hành và kiến trúc của máy, gọi script build tương ứng (`build_macos.sh`, `build_windows.ps1`, `build_linux.sh`), rồi chép file cài của phiên bản hiện tại trong `dist/` sang `release/v<version>/ezyocr-<version>-<os>-<arch>.<đuôi>` và tạo `NOTES.md` nếu chưa có. Đã build rồi và chỉ muốn chép lại file thì thêm `--skip-build`. Biến môi trường của các script build (`SIGN_IDENTITY`, `PYTHON`) vẫn dùng được như khi gọi trực tiếp.
+
+Thư mục `release/` không được commit. Gom file từ `release/v<version>/` của các máy build về một máy, rồi viết release notes vào `NOTES.md`:
+
+```
+release/
+└── v1.0.0/
+    ├── NOTES.md
+    ├── ezyocr-1.0.0-macos-arm64.dmg
+    ├── ezyocr-1.0.0-windows-x64.msi
+    └── ezyocr-1.0.0-linux-x64.deb
+```
+
+- Tag có dạng `v<version>`, `<version>` trùng với `version` trong `pyproject.toml` của bản build.
+- Admin plugin nhận ra hệ điều hành và kiến trúc của file qua tên file: hệ điều hành theo token (`macos`, `mac`, `osx`, `darwin`, `windows`, `win`, `linux`) hoặc đuôi file (`.dmg`, `.pkg`, `.exe`, `.msi`, `.deb`, `.rpm`, `.AppImage`...), kiến trúc theo token (`arm64`, `aarch64`, `x64`, `x86_64`, `amd64`, `x86`, `universal`). Các file `.sha256`, `.sha512`, `.sig`, `.asc` bị bỏ qua.
+- Briefcase đặt tên mặc định không có kiến trúc cho `.dmg` và `.msi` (`EzyOCR-<version>.dmg`, `EzyOCR-<version>.msi`), nên `build_release.py` đổi tên theo mẫu `ezyocr-<version>-<os>-<arch>.<đuôi>`. Nếu tự chép file thì cũng phải đặt tên theo mẫu này; bản macOS bắt buộc phải có `arm64` hoặc `x64`, vì bản build cho Apple Silicon và Intel là hai file khác nhau.
+- Mỗi cặp hệ điều hành + kiến trúc chỉ có một file.
+
+### 2. Thử trước bằng mock GitHub
+
+`tools/mock_github_server.py` giả lập API release của GitHub, đọc file theo cấu trúc `<thư mục dữ liệu>/<owner>/<repo>/<tag>/` (cùng cấu trúc với `release/<tag>/`, có `NOTES.md` làm nội dung release). Chép `release/<tag>/` vào `output/mock-github/<owner>/<repo>/<tag>/`, chạy mock server, rồi trỏ **GitHub API URL** trong Cài đặt của admin vào mock server để thử luồng cập nhật của app trước khi phát hành thật.
+
+### 3. Tạo release trên GitHub
+
+Dùng [GitHub CLI](https://cli.github.com/) (`gh auth login` một lần). Các lệnh dưới đây dùng repo mặc định `youngmonkeys/ezyocr-apps`; nếu admin cấu hình repo khác thì thay cho đúng:
+
+```bash
+cd release/v1.0.0
+gh release create v1.0.0 \
+  --repo youngmonkeys/ezyocr-apps \
+  --title "EzyOCR 1.0.0" \
+  --notes-file NOTES.md \
+  --draft \
+  $(ls | grep -v '^NOTES.md$')
+```
+
+- Tạo dạng `--draft` trước: `releases/latest` không trả về release nháp nên app chưa thấy bản mới. Kiểm tra file và nội dung trên trang GitHub rồi bấm **Publish release** (hoặc `gh release edit v1.0.0 --repo youngmonkeys/ezyocr-apps --draft=false`).
+- Sau khi publish, GitHub tự tính SHA-256 cho từng file; app dùng giá trị này để kiểm tra file tải về.
+- Thêm file vào release đã có: `gh release upload v1.0.0 <file> --repo youngmonkeys/ezyocr-apps` (thêm `--clobber` để ghi đè file cùng tên).
+- Admin plugin lưu kết quả gọi GitHub và chỉ gọi lại sau khoảng thời gian cấu hình trong Cài đặt (mặc định 720 phút), hoặc khi đổi API URL/repository, nên app có thể chưa thấy bản mới ngay sau khi publish.
+- Không xoá hay sửa file của release đã publish khi máy trạm có thể đang tải; muốn sửa lỗi thì phát hành tag mới.
 
 ## Dữ liệu của ứng dụng trên máy
 
