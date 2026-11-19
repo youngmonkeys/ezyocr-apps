@@ -233,6 +233,16 @@
           <div class="hint">{{ setup.camera_hint }}</div>
         </div>
         <div>
+          <label for="camera_flip">{{ setup.camera_flip }}</label>
+          <select id="camera_flip" data-key="camera.flip">
+            <option value="none">{{ setup.camera_flip_none }}</option>
+            <option value="horizontal">{{ setup.camera_flip_horizontal }}</option>
+            <option value="vertical">{{ setup.camera_flip_vertical }}</option>
+            <option value="both">{{ setup.camera_flip_both }}</option>
+          </select>
+          <div class="hint">{{ setup.camera_flip_hint }}</div>
+        </div>
+        <div>
           <label for="language">{{ setup.language }}</label>
           <select id="language" data-key="language">
             <option value="auto">{{ language.auto }}</option>

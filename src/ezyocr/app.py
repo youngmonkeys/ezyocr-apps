@@ -11,6 +11,7 @@ import sys
 import threading
 import time
 import urllib.error
+import urllib.request
 from datetime import datetime
 from html import escape
 from pathlib import Path
@@ -44,6 +45,7 @@ MAX_IMAGE_BYTES = 5 * 1024 * 1024
 DIFF_CONTEXT_LINES = 3
 AUTO_UPDATE_INTERVAL_SECONDS = 12 * 60 * 60
 AUTO_UPDATE_RETRY_SECONDS = 60
+SERVER_CHECK_TIMEOUT_SECONDS = 5
 
 
 class StationApp:
@@ -267,8 +269,18 @@ class StationApp:
         if not self.settings.configured:
             self.open_setup()
             return
+        _in_thread(lambda: self._load_station(self._home_url()))
+
+    def _load_station(self, url):
+        admin_url = self.settings.web.admin_url
+        if not _server_reachable(admin_url):
+            logger.warning("Cannot connect to %s", admin_url)
+            self._showing_setup = True
+            self._setup_page = "server_unreachable.html"
+            self._window.load_html(i18n.render_page(self._setup_page))
+            return
         self._showing_setup = False
-        self._window.load_url(self._home_url())
+        self._window.load_url(url)
 
     def open_setup(self):
         self._showing_setup = True
@@ -735,7 +747,7 @@ class StationApp:
             _clear_web_data(self._window)
         if not self._camera_test and not self._showing_setup:
             last_page = None if web.clear_session_on_start else _read_last_page()
-            self._window.load_url(last_page if _same_site(last_page, web.admin_url) else self._home_url())
+            self._load_station(last_page if _same_site(last_page, web.admin_url) else self._home_url())
         self._start_services()
         if not self._camera_test:
             threading.Thread(target=self._auto_update_loop, name="auto-update", daemon=True).start()
@@ -965,6 +977,16 @@ def _format_time(millis):
         return datetime.fromtimestamp(int(millis) / 1000).strftime("%d/%m/%Y %H:%M")
     except (TypeError, ValueError, OSError):
         return ""
+
+
+def _server_reachable(url):
+    try:
+        with urllib.request.urlopen(urllib.request.Request(url, method="HEAD"), timeout=SERVER_CHECK_TIMEOUT_SECONDS):
+            return True
+    except urllib.error.HTTPError:
+        return True
+    except (urllib.error.URLError, OSError, ValueError):
+        return False
 
 
 def _same_site(url, base_url):

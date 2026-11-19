@@ -20,6 +20,7 @@
     "index": 0,
     "width": 3840,
     "height": 2160,
+    "flip": "none",
     "detect_width": 1280,
     "still_ms": 250,
     "motion_threshold": 4.0,

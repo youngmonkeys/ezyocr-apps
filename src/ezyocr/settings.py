@@ -34,6 +34,7 @@ class CameraSettings:
     index: int = 0
     width: int = 3840
     height: int = 2160
+    flip: str = "none"
     detect_width: int = 1280
     still_ms: int = 250
     motion_threshold: float = 4.0

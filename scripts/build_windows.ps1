@@ -55,6 +55,9 @@ if (Test-Path $AppDir) {
 Write-Host "==> Building app"
 Invoke-Step @($Python, "-m", "briefcase", "build", "windows", "app", "--no-input")
 
+Write-Host "==> Resetting file permissions"
+icacls "build" /reset /T /C /Q | Out-Null
+
 Write-Host "==> Packaging MSI"
 if ($env:SIGN_IDENTITY) {
     Invoke-Step @($Python, "-m", "briefcase", "package", "windows", "app", "--identity", $env:SIGN_IDENTITY, "--no-input")

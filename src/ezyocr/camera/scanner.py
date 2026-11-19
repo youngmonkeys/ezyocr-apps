@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 REOPEN_DELAY_SECONDS = 3.0
 PREVIEW_INTERVAL_SECONDS = 0.3
+FLIP_CODES = {"horizontal": 1, "vertical": 0, "both": -1}
 
 
 class CameraScanner:
@@ -79,6 +80,7 @@ class CameraScanner:
         return capture
 
     def _scan(self, capture):
+        flip_code = FLIP_CODES.get(self._settings.flip)
         previous = None
         still_since = None
         captured = False
@@ -90,6 +92,8 @@ class CameraScanner:
             if not ok:
                 logger.warning("Camera stopped delivering frames")
                 return
+            if flip_code is not None:
+                frame = cv2.flip(frame, flip_code)
             small = self._downscale(frame)
             if self._on_preview and time.monotonic() - last_preview >= PREVIEW_INTERVAL_SECONDS:
                 last_preview = time.monotonic()
