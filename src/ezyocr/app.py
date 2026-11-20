@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import platform
+import re
 import shutil
 import subprocess
 import sys
@@ -45,6 +46,8 @@ MAX_IMAGE_BYTES = 5 * 1024 * 1024
 DIFF_CONTEXT_LINES = 3
 AUTO_UPDATE_INTERVAL_SECONDS = 12 * 60 * 60
 AUTO_UPDATE_RETRY_SECONDS = 60
+WINDOWS_MB_ICONINFORMATION = 0x40
+WINDOWS_MB_SETFOREGROUND = 0x10000
 SERVER_CHECK_TIMEOUT_SECONDS = 5
 
 
@@ -647,9 +650,9 @@ class StationApp:
         if release is None:
             return None
         return {
-            "version": release.get("version") or "",
+            "version": _display_version(release.get("version")),
             "current": __version__,
-            "release_notes": (release.get("releaseNotes") or "").strip(),
+            "release_notes": _plain_release_notes(release.get("releaseNotes")),
         }
 
     def install_update(self):
@@ -669,7 +672,7 @@ class StationApp:
             if manual:
                 _alert(self._window, _update_error_message(e))
             return
-        version = release.get("version") or ""
+        version = _display_version(release.get("version"))
         if not release.get("updateAvailable"):
             if manual:
                 _alert(self._window, t("update.latest", version=__version__))
@@ -684,7 +687,7 @@ class StationApp:
             t("update.available", version=version, current=__version__),
             t("update.download"),
             t("update.later"),
-            (release.get("releaseNotes") or "").strip() or None,
+            _plain_release_notes(release.get("releaseNotes")) or None,
         ):
             self._declined_update_version = version
             return
@@ -925,6 +928,23 @@ def _remote_error_message(error):
     return result["error"]
 
 
+def _display_version(version):
+    version = str(version or "").strip()
+    return version[1:] if version[:1] in ("v", "V") else version
+
+
+def _plain_release_notes(notes):
+    lines = []
+    for line in str(notes or "").strip().splitlines():
+        line = re.sub(r"^\s{0,3}#{1,6}\s+", "", line)
+        line = re.sub(r"\*\*(.+?)\*\*|__(.+?)__", lambda m: m.group(1) or m.group(2), line)
+        line = re.sub(r"`([^`]*)`", r"\1", line)
+        line = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", line)
+        line = re.sub(r"^(\s*)[-*+]\s+", r"\1• ", line)
+        lines.append(line)
+    return "\n".join(lines).strip()
+
+
 def _update_error_message(error):
     if isinstance(error, updater.UpdateError):
         return t(f"update.error.{error.reason}")
@@ -1108,6 +1128,9 @@ def _confirm(window, message, confirm, cancel, details=None):
 
 
 def _alert(window, message, details=None):
+    if sys.platform == "win32":
+        _windows_message_box(window, f"{message}\n\n{details}" if details else message)
+        return
     if sys.platform != "darwin":
         if window is not None:
             window.create_confirmation_dialog(t("app.title"), f"{message}\n\n{details}" if details else message)
@@ -1131,6 +1154,17 @@ def _alert(window, message, details=None):
 
     AppHelper.callAfter(show)
     done.wait()
+
+
+def _windows_message_box(window, text):
+    import ctypes
+
+    owner = None
+    try:
+        owner = window.native.Handle.ToInt64() if window is not None else None
+    except Exception:
+        logger.debug("Cannot get the window handle", exc_info=True)
+    ctypes.windll.user32.MessageBoxW(ctypes.c_void_p(owner), text, t("app.title"), WINDOWS_MB_ICONINFORMATION | WINDOWS_MB_SETFOREGROUND)
 
 
 def _set_alert_icon(alert):
